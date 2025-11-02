@@ -10,9 +10,9 @@ public class CoffeeTunesDbContext : DbContext
     }
 
     public DbSet<Bar> Bars { get; set; }
-    public DbSet<Club> Clubs { get; set; }
+    public DbSet<Franchise> Franchises { get; set; }
     public DbSet<Hipster> Hipsters { get; set; }
-    public DbSet<HipstersInClub> HipstersInClubs { get; set; }
+    public DbSet<HipstersInFranchise> HipstersInFranchises { get; set; }
     public DbSet<Ingredient> Ingredients { get; set; }
     public DbSet<Bean> Beans { get; set; }
 
@@ -20,7 +20,7 @@ public class CoffeeTunesDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         
-        modelBuilder.Entity<HipstersInClub>()
-            .HasKey(hic => new { hic.ClubId, hic.HipsterId });
+        modelBuilder.Entity<HipstersInFranchise>()
+            .HasKey(hic => new { hic.FranchiseId, hic.HipsterId });
     }
 }

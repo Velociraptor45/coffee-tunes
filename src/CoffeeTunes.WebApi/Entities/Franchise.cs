@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CoffeeTunes.WebApi.Entities;
 
 [Index(nameof(Name), IsUnique = true)]
-public class Club
+public class Franchise
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
@@ -13,6 +13,6 @@ public class Club
 
     public required string Name { get; set; }
 
-    [InverseProperty(nameof(HipstersInClub.Club))]
-    public ICollection<HipstersInClub>? HipstersInClubs { get; set; }
+    [InverseProperty(nameof(HipstersInFranchise.Franchise))]
+    public ICollection<HipstersInFranchise>? HipstersInFranchises { get; set; }
 }

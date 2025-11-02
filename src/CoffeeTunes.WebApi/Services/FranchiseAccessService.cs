@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CoffeeTunes.WebApi.Services;
 
-public class ClubAccessService(IHttpContextAccessor httpContextAccessor, JwtSecurityTokenHandler handler, AuthOptions authOptions,
+public class FranchiseAccessService(IHttpContextAccessor httpContextAccessor, JwtSecurityTokenHandler handler, AuthOptions authOptions,
     CoffeeTunesDbContext dbContext)
 {
-    public async Task EnsureAccessToClubAsync(Guid clubId, CancellationToken cancellationToken)
+    public async Task EnsureAccessToFranchiseAsync(Guid franchiseId, CancellationToken cancellationToken)
     {
         var httpContext = httpContextAccessor.HttpContext 
                           ?? throw new InvalidOperationException("No HttpContext available");
@@ -20,11 +20,11 @@ public class ClubAccessService(IHttpContextAccessor httpContextAccessor, JwtSecu
             throw new InvalidOperationException("Invalid token");
         }
         
-        var result = await dbContext.HipstersInClubs.AsNoTracking()
-            .AnyAsync(hic => hic.ClubId == clubId && hic.HipsterId == subject, cancellationToken);
+        var result = await dbContext.HipstersInFranchises.AsNoTracking()
+            .AnyAsync(hic => hic.FranchiseId == franchiseId && hic.HipsterId == subject, cancellationToken);
 
         if (!result)
-            throw new InvalidOperationException("Club not found");
+            throw new InvalidOperationException("Franchise not found");
     }
     
     public (Guid Id, string Name)? GetHipsterInfoFromToken()

@@ -1,6 +1,6 @@
-namespace CoffeeTunes.Contracts.Clubs;
+namespace CoffeeTunes.Contracts.Franchise;
 
-public class ClubOverviewContract
+public class FranchiseOverviewContract
 {
     public required Guid Id { get; set; }
     public required string Name { get; set; }

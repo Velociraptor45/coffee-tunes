@@ -21,7 +21,7 @@ builder.Services.AddCors();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddHostedService<DatabaseMigrationBackgroundService>();
-builder.Services.AddScoped<ClubAccessService>();
+builder.Services.AddScoped<FranchiseAccessService>();
 
 SetupSecurity();
 
@@ -65,7 +65,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.RegisterClubEndpoints();
+app.RegisterFranchiseEndpoints();
 
 await app.RunAsync();
 
