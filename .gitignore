@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+appsettings.Local.json
+http-client.private.env.json
+
 # User-specific files
 *.rsuser
 *.suo
