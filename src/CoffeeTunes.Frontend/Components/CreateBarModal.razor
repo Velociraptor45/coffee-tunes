@@ -34,21 +34,21 @@
                 <div class="form-group">
                     <label for="max-ingredients">
                         Max Ingredients Per Hipster
-                        <span class="help-text">(1-30, default: 5)</span>
+                        <span class="help-text">(@MinIngredientsPerHipster-@MaxIngredientsPerHipster, default: @DefaultIngredientsPerHipster)</span>
                     </label>
                     <input 
                         id="max-ingredients"
                         type="number" 
                         class="form-input" 
                         @bind="maxIngredientsPerHipster" 
-                        min="1"
-                        max="30"
+                        min="@MinIngredientsPerHipster"
+                        max="@MaxIngredientsPerHipster"
                         disabled="@isSubmitting"
                         required />
-                    @if (maxIngredientsPerHipster < 1 || maxIngredientsPerHipster > 30)
+                    @if (maxIngredientsPerHipster < MinIngredientsPerHipster || maxIngredientsPerHipster > MaxIngredientsPerHipster)
                     {
                         <div class="validation-message">
-                            Please enter a value between 1 and 30
+                            Please enter a value between @MinIngredientsPerHipster and @MaxIngredientsPerHipster
                         </div>
                     }
                 </div>
@@ -57,7 +57,7 @@
                     <button type="button" class="btn-cancel" @onclick="Close" disabled="@isSubmitting">
                         Cancel
                     </button>
-                    <button type="submit" class="btn-create" disabled="@(isSubmitting || string.IsNullOrWhiteSpace(topic) || maxIngredientsPerHipster < 1 || maxIngredientsPerHipster > 30)">
+                    <button type="submit" class="btn-create" disabled="@(isSubmitting || !IsFormValid)">
                         @if (isSubmitting)
                         {
                             <span class="spinner">☕</span>
@@ -90,14 +90,23 @@
     [Inject]
     public ICoffeeTunesApi Api { get; set; } = default!;
 
+    private const uint MinIngredientsPerHipster = 1;
+    private const uint MaxIngredientsPerHipster = 30;
+    private const uint DefaultIngredientsPerHipster = 5;
+
     private string topic = string.Empty;
-    private uint maxIngredientsPerHipster = 5;
+    private uint maxIngredientsPerHipster = DefaultIngredientsPerHipster;
     private bool isSubmitting = false;
     private string? errorMessage;
 
+    private bool IsFormValid => 
+        !string.IsNullOrWhiteSpace(topic) && 
+        maxIngredientsPerHipster >= MinIngredientsPerHipster && 
+        maxIngredientsPerHipster <= MaxIngredientsPerHipster;
+
     private async Task HandleSubmit()
     {
-        if (string.IsNullOrWhiteSpace(topic) || maxIngredientsPerHipster < 1 || maxIngredientsPerHipster > 30)
+        if (!IsFormValid)
         {
             return;
         }
@@ -165,7 +174,7 @@
     private void ResetForm()
     {
         topic = string.Empty;
-        maxIngredientsPerHipster = 5;
+        maxIngredientsPerHipster = DefaultIngredientsPerHipster;
         errorMessage = null;
         isSubmitting = false;
     }
