@@ -22,6 +22,34 @@
     color: #6d4c41;
     font-size: 1.2rem;
     font-style: italic;
+    margin-bottom: 1.5rem;
+}
+
+.create-franchise-button {
+    background: linear-gradient(135deg, #6d4c41 0%, #5d4037 100%);
+    color: white;
+    border: none;
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(109, 76, 65, 0.4);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.create-franchise-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(109, 76, 65, 0.6);
+}
+
+.create-franchise-button .button-icon {
+    font-size: 1.2rem;
+    font-weight: bold;
 }
 
 .loading-container {
