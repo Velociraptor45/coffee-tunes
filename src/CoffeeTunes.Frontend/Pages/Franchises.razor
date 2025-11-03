@@ -11,10 +11,13 @@
             <div class="franchises-header">
                 <h1 class="franchises-title">☕ My Coffee Franchises</h1>
                 <p class="franchises-subtitle">Choose your favorite spot to share tunes</p>
-                <button class="create-franchise-button" @onclick="OpenCreateModal">
-                    <span class="button-icon">➕</span>
-                    <span>Create New Franchise</span>
-                </button>
+                @if (!isLoading)
+                {
+                    <button class="create-franchise-button" @onclick="OpenCreateModal">
+                        <span class="button-icon">➕</span>
+                        <span>Create New Franchise</span>
+                    </button>
+                }
             </div>
 
             @if (isLoading)
