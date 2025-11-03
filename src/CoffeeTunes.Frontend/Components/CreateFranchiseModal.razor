@@ -96,12 +96,24 @@
             }
             else
             {
-                errorMessage = "Failed to create franchise. Please try again.";
+                var statusCode = (int)response.StatusCode;
+                errorMessage = statusCode switch
+                {
+                    400 => "Invalid franchise name. Please check your input and try again.",
+                    401 or 403 => "You don't have permission to create a franchise.",
+                    409 => "A franchise with this name already exists.",
+                    _ => $"Failed to create franchise (Error {statusCode}). Please try again."
+                };
             }
         }
-        catch (Exception)
+        catch (HttpRequestException)
         {
-            errorMessage = "Something went wrong. Please check your connection and try again.";
+            errorMessage = "Unable to connect to the server. Please check your connection and try again.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An unexpected error occurred. Please try again.";
+            Console.Error.WriteLine($"Error creating franchise: {ex.Message}");
         }
         finally
         {
