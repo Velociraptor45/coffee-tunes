@@ -11,6 +11,10 @@
             <div class="franchises-header">
                 <h1 class="franchises-title">☕ My Coffee Franchises</h1>
                 <p class="franchises-subtitle">Choose your favorite spot to share tunes</p>
+                <button class="create-franchise-button" @onclick="OpenCreateModal">
+                    <span class="button-icon">➕</span>
+                    <span>Create New Franchise</span>
+                </button>
             </div>
 
             @if (isLoading)
@@ -51,6 +55,11 @@
                 </div>
             }
         </div>
+
+        <CreateFranchiseModal 
+            IsVisible="showCreateModal" 
+            OnClose="CloseCreateModal" 
+            OnFranchiseCreated="OnFranchiseCreated" />
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -67,6 +76,7 @@
     private List<FranchiseOverviewContract>? franchises;
     private bool isLoading = true;
     private string? errorMessage;
+    private bool showCreateModal = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -96,5 +106,21 @@
     private void NavigateToFranchise(Guid franchiseId)
     {
         Navigation.NavigateTo($"/franchise/{franchiseId}");
+    }
+
+    private void OpenCreateModal()
+    {
+        showCreateModal = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        showCreateModal = false;
+    }
+
+    private async Task OnFranchiseCreated(string franchiseName)
+    {
+        // Reload the franchises list to show the newly created franchise
+        await LoadFranchises();
     }
 }

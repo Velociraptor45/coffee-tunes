@@ -1,0 +1,132 @@
+@using CoffeeTunes.Contracts
+@using CoffeeTunes.Contracts.Franchise
+
+<div class="modal-backdrop @(IsVisible ? "show" : "")" @onclick="OnBackdropClick">
+    <div class="modal-content" @onclick:stopPropagation="true">
+        <div class="modal-header">
+            <h2 class="modal-title">☕ Create New Franchise</h2>
+            <button class="modal-close" @onclick="Close">✕</button>
+        </div>
+        
+        @if (errorMessage != null)
+        {
+            <div class="modal-error">
+                <div class="error-icon">⚠️</div>
+                <p>@errorMessage</p>
+            </div>
+        }
+
+        <div class="modal-body">
+            <form @onsubmit="HandleSubmit">
+                <div class="form-group">
+                    <label for="franchise-name">Franchise Name</label>
+                    <input 
+                        id="franchise-name"
+                        type="text" 
+                        class="form-input" 
+                        @bind="franchiseName" 
+                        placeholder="Enter your coffee franchise name..."
+                        maxlength="100"
+                        disabled="@isSubmitting"
+                        required />
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" @onclick="Close" disabled="@isSubmitting">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-create" disabled="@(isSubmitting || string.IsNullOrWhiteSpace(franchiseName))">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner">☕</span>
+                            <span>Creating...</span>
+                        }
+                        else
+                        {
+                            <span>Create Franchise</span>
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnFranchiseCreated { get; set; }
+
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+
+    private string franchiseName = string.Empty;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(franchiseName))
+        {
+            return;
+        }
+
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            var contract = new CreateFranchiseContract
+            {
+                Name = franchiseName.Trim()
+            };
+
+            var response = await Api.CreateFranchise(contract);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                await OnFranchiseCreated.InvokeAsync(franchiseName);
+                ResetForm();
+                await OnClose.InvokeAsync();
+            }
+            else
+            {
+                errorMessage = "Failed to create franchise. Please try again.";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "Something went wrong. Please check your connection and try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Close()
+    {
+        ResetForm();
+        OnClose.InvokeAsync();
+    }
+
+    private void OnBackdropClick()
+    {
+        if (!isSubmitting)
+        {
+            Close();
+        }
+    }
+
+    private void ResetForm()
+    {
+        franchiseName = string.Empty;
+        errorMessage = null;
+        isSubmitting = false;
+    }
+}
