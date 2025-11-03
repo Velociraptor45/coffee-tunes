@@ -88,7 +88,7 @@ public static class BarEndpoints
                 Id = b.Id,
                 Topic = b.Topic,
                 IsOpen = b.IsOpen,
-                IsCurrentlyVisited = b.HasSupplyLeft
+                HasSupplyLeft = b.HasSupplyLeft
             })
             .FirstOrDefaultAsync(cancellationToken);
 
