@@ -1,0 +1,196 @@
+@page "/franchise/{franchiseId:guid}"
+@using Microsoft.AspNetCore.Components.Authorization
+@using CoffeeTunes.Contracts
+@using CoffeeTunes.Contracts.Franchise
+@using CoffeeTunes.Contracts.Bars
+
+<PageTitle>Coffee Tunes - @(franchise?.Name ?? "Franchise")</PageTitle>
+
+<AuthorizeView Policy="User">
+    <Authorized>
+        <div class="franchise-details-container">
+            @if (isLoading)
+            {
+                <div class="loading-container">
+                    <div class="coffee-loader">☕</div>
+                    <p>Brewing your bars...</p>
+                </div>
+            }
+            else if (errorMessage != null)
+            {
+                <div class="error-state">
+                    <div class="error-icon">⚠️</div>
+                    <h2>Oops! Something went wrong</h2>
+                    <p>@errorMessage</p>
+                    <button class="retry-button" @onclick="LoadFranchiseData">Try Again</button>
+                </div>
+            }
+            else if (franchise != null)
+            {
+                <div class="franchise-header">
+                    <button class="back-button" @onclick="NavigateBack">
+                        <span class="back-icon">←</span>
+                        <span>Back to Franchises</span>
+                    </button>
+                    <h1 class="franchise-title">🏪 @franchise.Name</h1>
+                    <p class="franchise-subtitle">Your coffee bar collection</p>
+                </div>
+
+                @if (openBars.Any() || inSupplyBars.Any())
+                {
+                    @if (openBars.Any())
+                    {
+                        <div class="bars-section">
+                            <h2 class="section-title">🔥 Currently Open</h2>
+                            <div class="bars-grid">
+                                @foreach (var bar in openBars)
+                                {
+                                    <div class="bar-card open-bar" @onclick="() => NavigateToBar(bar.Id)">
+                                        <div class="bar-status-badge">
+                                            <span class="status-icon">🔥</span>
+                                            <span>OPEN</span>
+                                        </div>
+                                        <div class="bar-icon">☕</div>
+                                        <h3 class="bar-topic">@bar.Topic</h3>
+                                        <div class="bar-arrow">→</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (inSupplyBars.Any())
+                    {
+                        <div class="bars-section">
+                            <h2 class="section-title">📦 In Supply</h2>
+                            <div class="bars-grid">
+                                @foreach (var bar in inSupplyBars)
+                                {
+                                    <div class="bar-card in-supply-bar" @onclick="() => NavigateToBar(bar.Id)">
+                                        <div class="bar-icon">☕</div>
+                                        <h3 class="bar-topic">@bar.Topic</h3>
+                                        <div class="bar-arrow">→</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <div class="empty-icon">🎵</div>
+                        <h2>No Active Bars</h2>
+                        <p>This franchise doesn't have any active bars yet. Time to create one!</p>
+                    </div>
+                }
+
+                @if (outOfSupplyBars.Any())
+                {
+                    <div class="bars-section out-of-supply-section">
+                        <button class="section-toggle" @onclick="ToggleOutOfSupply">
+                            <h2 class="section-title">
+                                <span class="toggle-icon">@(showOutOfSupply ? "▼" : "▶")</span>
+                                <span>🚫 Out of Supply (@outOfSupplyBars.Count)</span>
+                            </h2>
+                        </button>
+                        @if (showOutOfSupply)
+                        {
+                            <div class="bars-grid">
+                                @foreach (var bar in outOfSupplyBars)
+                                {
+                                    <div class="bar-card out-of-supply-bar" @onclick="() => NavigateToBar(bar.Id)">
+                                        <div class="bar-icon">🚫</div>
+                                        <h3 class="bar-topic">@bar.Topic</h3>
+                                        <div class="bar-arrow">→</div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public Guid FranchiseId { get; set; }
+
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+
+    [Inject]
+    public NavigationManager Navigation { get; set; } = default!;
+
+    private FranchiseContract? franchise;
+    private List<BarOverviewContract> allBars = new();
+    private List<BarOverviewContract> openBars = new();
+    private List<BarOverviewContract> inSupplyBars = new();
+    private List<BarOverviewContract> outOfSupplyBars = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+    private bool showOutOfSupply = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFranchiseData();
+    }
+
+    private async Task LoadFranchiseData()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            // Load franchise details and bars in parallel
+            var franchiseTask = Api.GetFranchise(FranchiseId);
+            var barsTask = Api.GetAllBars(FranchiseId);
+
+            await Task.WhenAll(franchiseTask, barsTask);
+
+            franchise = await franchiseTask;
+            allBars = await barsTask;
+
+            // Categorize bars based on their state
+            // Open bars: IsOpen = true (these always have supply left)
+            openBars = allBars.Where(b => b.IsOpen).ToList();
+            
+            // In supply bars: HasSupplyLeft = true AND IsOpen = false
+            inSupplyBars = allBars.Where(b => b.HasSupplyLeft && !b.IsOpen).ToList();
+            
+            // Out of supply bars: HasSupplyLeft = false (these are never open)
+            outOfSupplyBars = allBars.Where(b => !b.HasSupplyLeft).ToList();
+        }
+        catch (Exception)
+        {
+            errorMessage = "Unable to load franchise details. Please try again later.";
+            franchise = null;
+            allBars = new();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void NavigateToBar(Guid barId)
+    {
+        Navigation.NavigateTo($"/franchise/{FranchiseId}/bar/{barId}");
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/franchises");
+    }
+
+    private void ToggleOutOfSupply()
+    {
+        showOutOfSupply = !showOutOfSupply;
+    }
+}
