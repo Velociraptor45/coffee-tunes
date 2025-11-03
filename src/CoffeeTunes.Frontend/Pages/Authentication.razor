@@ -52,9 +52,20 @@
 
     [Inject]
     public NavigationManager Navigation { get; set; } = default!;
-
+    
     private void OnLoginSucceeded(RemoteAuthenticationState state)
     {
-        Navigation.NavigateTo("/franchises");
+        if (string.IsNullOrEmpty(state.ReturnUrl))
+        {
+            state.ReturnUrl = $"{Navigation.BaseUri}franchises";
+            return;
+        }
+
+        var relativeReturnUrl = state.ReturnUrl.Replace(Navigation.BaseUri, string.Empty);
+        
+        if (string.IsNullOrEmpty(relativeReturnUrl) || relativeReturnUrl == "/")
+        {
+            state.ReturnUrl = $"{Navigation.BaseUri}franchises";
+        }
     }
 }
