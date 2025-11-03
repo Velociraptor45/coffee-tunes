@@ -1,0 +1,71 @@
+@page "/authentication/{action}"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+<RemoteAuthenticatorView Action="@Action" OnLogInSucceeded="OnLoginSucceeded">
+    <LoggingIn>
+        <div class="auth-container">
+            <div class="coffee-loader">☕</div>
+            <p>Brewing your session...</p>
+        </div>
+    </LoggingIn>
+    <LogInFailed>
+        <div class="auth-container">
+            <div class="error-icon">⚠️</div>
+            <h2>Login Failed</h2>
+            <p>Something went wrong while trying to log you in.</p>
+            <a href="/" class="retry-link">Try Again</a>
+        </div>
+    </LogInFailed>
+    <CompletingLoggingIn>
+        <div class="auth-container">
+            <div class="coffee-loader">☕</div>
+            <p>Completing login...</p>
+        </div>
+    </CompletingLoggingIn>
+    <CompletingLogOut>
+        <div class="auth-container">
+            <div class="coffee-loader">☕</div>
+            <p>Logging out...</p>
+        </div>
+    </CompletingLogOut>
+    <LogOutSucceeded>
+        <div class="auth-container">
+            <div class="success-icon">✓</div>
+            <h2>Logged Out</h2>
+            <p>You have been successfully logged out.</p>
+            <a href="/" class="retry-link">Login Again</a>
+        </div>
+    </LogOutSucceeded>
+    <LogOutFailed>
+        <div class="auth-container">
+            <div class="error-icon">⚠️</div>
+            <h2>Logout Failed</h2>
+            <p>Something went wrong while trying to log you out.</p>
+            <a href="/" class="retry-link">Back to Login</a>
+        </div>
+    </LogOutFailed>
+</RemoteAuthenticatorView>
+
+@code {
+    [Parameter]
+    public string? Action { get; set; }
+
+    [Inject]
+    public NavigationManager Navigation { get; set; } = default!;
+    
+    private void OnLoginSucceeded(RemoteAuthenticationState state)
+    {
+        if (string.IsNullOrEmpty(state.ReturnUrl))
+        {
+            state.ReturnUrl = $"{Navigation.BaseUri}franchises";
+            return;
+        }
+
+        var relativeReturnUrl = state.ReturnUrl.Replace(Navigation.BaseUri, string.Empty);
+        
+        if (string.IsNullOrEmpty(relativeReturnUrl) || relativeReturnUrl == "/")
+        {
+            state.ReturnUrl = $"{Navigation.BaseUri}franchises";
+        }
+    }
+}

@@ -1,0 +1,70 @@
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #3e2723 0%, #5d4037 50%, #6d4c41 100%);
+    text-align: center;
+    color: white;
+    padding: 2rem;
+}
+
+.coffee-loader {
+    font-size: 5rem;
+    animation: spin 2s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.auth-container p {
+    font-size: 1.3rem;
+    margin-top: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.error-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+    color: #ffeb3b;
+}
+
+.success-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+    color: #4caf50;
+    background: white;
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+}
+
+.auth-container h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.retry-link {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 1rem 2rem;
+    background: white;
+    color: #3e2723;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.retry-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+}

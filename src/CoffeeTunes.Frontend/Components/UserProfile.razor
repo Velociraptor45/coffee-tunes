@@ -1,0 +1,46 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using CoffeeTunes.Frontend.Configs
+@inject NavigationManager Navigation
+@inject AuthConfig AuthConfig
+
+<AuthorizeView>
+    <Authorized>
+        <div class="user-profile">
+            <div class="user-name" @onclick="ToggleDropdown">
+                <span class="user-icon">👤</span>
+                <span>@GetUserName(context)</span>
+                <span class="dropdown-arrow">▼</span>
+            </div>
+            @if (showDropdown)
+            {
+                <div class="user-dropdown">
+                    <button class="logout-button" @onclick="BeginLogout">
+                        <span class="logout-icon">🚪</span>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            }
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private bool showDropdown = false;
+
+    private void ToggleDropdown()
+    {
+        showDropdown = !showDropdown;
+    }
+
+    private string GetUserName(AuthenticationState state)
+    {
+        var nameClaim = state.User.FindFirst(AuthConfig.NameClaimIdentifier);
+        return nameClaim?.Value ?? "User";
+    }
+
+    private void BeginLogout()
+    {
+        Navigation.NavigateToLogout("authentication/logout");
+    }
+}

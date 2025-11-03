@@ -1,0 +1,100 @@
+@page "/franchises"
+@using Microsoft.AspNetCore.Components.Authorization
+@using CoffeeTunes.Contracts
+@using CoffeeTunes.Contracts.Franchise
+
+<PageTitle>Coffee Tunes - My Franchises</PageTitle>
+
+<AuthorizeView Policy="User">
+    <Authorized>
+        <div class="franchises-container">
+            <div class="franchises-header">
+                <h1 class="franchises-title">☕ My Coffee Franchises</h1>
+                <p class="franchises-subtitle">Choose your favorite spot to share tunes</p>
+            </div>
+
+            @if (isLoading)
+            {
+                <div class="loading-container">
+                    <div class="coffee-loader">☕</div>
+                    <p>Brewing your franchises...</p>
+                </div>
+            }
+            else if (errorMessage != null)
+            {
+                <div class="error-state">
+                    <div class="error-icon">⚠️</div>
+                    <h2>Oops! Something went wrong</h2>
+                    <p>@errorMessage</p>
+                    <button class="retry-button" @onclick="LoadFranchises">Try Again</button>
+                </div>
+            }
+            else if (franchises == null || !franchises.Any())
+            {
+                <div class="empty-state">
+                    <div class="empty-icon">🎵</div>
+                    <h2>No Franchises Yet</h2>
+                    <p>You're not part of any coffee franchise yet. Time to create one!</p>
+                </div>
+            }
+            else
+            {
+                <div class="franchises-grid">
+                    @foreach (var franchise in franchises)
+                    {
+                        <div class="franchise-card" @onclick="() => NavigateToFranchise(franchise.Id)">
+                            <div class="franchise-icon">🏪</div>
+                            <h3 class="franchise-name">@franchise.Name</h3>
+                            <div class="franchise-arrow">→</div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+
+    [Inject]
+    public NavigationManager Navigation { get; set; } = default!;
+
+    private List<FranchiseOverviewContract>? franchises;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFranchises();
+    }
+
+    private async Task LoadFranchises()
+    {
+        isLoading = true;
+        errorMessage = null;
+        
+        try
+        {
+            franchises = await Api.GetAllFranchises();
+        }
+        catch (Exception)
+        {
+            errorMessage = "Unable to load franchises. Please try again later.";
+            franchises = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void NavigateToFranchise(Guid franchiseId)
+    {
+        Navigation.NavigateTo($"/franchise/{franchiseId}");
+    }
+}
