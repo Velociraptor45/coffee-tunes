@@ -17,6 +17,7 @@ public static class BarEndpoints
         endpoints
             .RegisterCreateBar()
             .RegisterGetBar()
+            .RegisterGetAllBars()
             .RegisterAddIngredient()
             .RegisterOpenBar()
             .RegisterCloseBar();
@@ -60,6 +61,38 @@ public static class BarEndpoints
         await dbContext.SaveChangesAsync(cancellationToken);
         
         return Results.CreatedAtRoute(nameof(GetBar), new { id = bar.Id });
+    }
+
+    private static IEndpointRouteBuilder RegisterGetAllBars(this IEndpointRouteBuilder builder)
+    {
+        builder.MapGet($"/{_routeBase}/all", GetAllBars)
+            .WithName(nameof(GetAllBars))
+            .RequireAuthorization("User");
+
+        return builder;
+    }
+    
+    private static async Task<IResult> GetAllBars(
+        [FromRoute] Guid franchiseId,
+        [FromServices] CoffeeTunesDbContext dbContext,
+        [FromServices] FranchiseAccessService franchiseAccessService,
+        CancellationToken cancellationToken)
+    {
+        await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
+        
+        var bars = await dbContext.Bars
+            .AsNoTracking()
+            .Where(b => b.FranchiseId == franchiseId)
+            .Select(b => new BarOverviewContract
+            {
+                Id = b.Id,
+                Topic = b.Topic,
+                IsOpen = b.IsOpen,
+                HasSupplyLeft = b.HasSupplyLeft
+            })
+            .ToListAsync(cancellationToken);
+
+        return Results.Ok(bars);
     }
 
     private static IEndpointRouteBuilder RegisterGetBar(this IEndpointRouteBuilder builder)

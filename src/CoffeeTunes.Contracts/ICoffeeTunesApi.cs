@@ -14,6 +14,9 @@ public interface ICoffeeTunesApi
     [Get("v1/{franchiseId}/bars/{id}")]
     Task<BarContract> GetBar([Path] Guid franchiseId, [Path] Guid id);
 
+    [Get("v1/{franchiseId}/bars/all")]
+    Task<BarOverviewContract> GetAllBars([Path] Guid franchiseId);
+
     [Post("v1/{franchiseId}/bars/{id}/ingredient")]
     Task AddIngredient([Path] Guid franchiseId, [Path] Guid id, [Body] AddIngredientContract contract);
 

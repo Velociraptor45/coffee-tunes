@@ -66,6 +66,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.RegisterFranchiseEndpoints();
+app.RegisterBarEndpoints();
 
 await app.RunAsync();
 
