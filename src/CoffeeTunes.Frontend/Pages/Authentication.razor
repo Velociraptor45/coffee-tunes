@@ -1,7 +1,7 @@
 @page "/authentication/{action}"
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
-<RemoteAuthenticatorView Action="@Action">
+<RemoteAuthenticatorView Action="@Action" OnLogInSucceeded="OnLoginSucceeded">
     <LoggingIn>
         <div class="auth-container">
             <div class="coffee-loader">☕</div>
@@ -49,4 +49,12 @@
 @code {
     [Parameter]
     public string? Action { get; set; }
+
+    [Inject]
+    public NavigationManager Navigation { get; set; } = default!;
+
+    private void OnLoginSucceeded(RemoteAuthenticationState state)
+    {
+        Navigation.NavigateTo("/franchises");
+    }
 }
