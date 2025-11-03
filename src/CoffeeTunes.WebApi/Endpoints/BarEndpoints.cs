@@ -1,16 +1,19 @@
+using System.Diagnostics.CodeAnalysis;
 using CoffeeTunes.Contracts.Bars;
 using CoffeeTunes.Contracts.Ingredients;
 using CoffeeTunes.WebApi.Contexts;
 using CoffeeTunes.WebApi.Entities;
 using CoffeeTunes.WebApi.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing.Template;
 using Microsoft.EntityFrameworkCore;
 
 namespace CoffeeTunes.WebApi.Endpoints;
 
 public static class BarEndpoints
 {
-    private const string _routeBase = "v1/{{franchiseId:guid}}/bars";
+    [StringSyntax("Route")]
+    private const string _routeBase = $"v1/{{franchiseId:guid}}/bars";
     
     public static void RegisterBarEndpoints(this IEndpointRouteBuilder endpoints)
     {
