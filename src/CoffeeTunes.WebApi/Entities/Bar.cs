@@ -13,6 +13,8 @@ public class Bar
 
     public required bool IsOpen { get; set; }
 
+    public required uint MaxIngredientsPerHipster { get; set; }
+
     public required bool HasSupplyLeft { get; set; }
     
     public required Guid FranchiseId { get; set; }

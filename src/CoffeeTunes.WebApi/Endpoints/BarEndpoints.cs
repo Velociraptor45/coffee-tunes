@@ -53,7 +53,8 @@ public static class BarEndpoints
             Topic = contract.Topic,
             IsOpen = false,
             HasSupplyLeft = true,
-            FranchiseId = franchiseId
+            FranchiseId = franchiseId,
+            MaxIngredientsPerHipster = contract.MaxIngredientsPerHipster
         };
         dbContext.Bars.Add(bar);
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -116,9 +117,14 @@ public static class BarEndpoints
         var (hipsterId, _) = franchiseAccessService.GetHipsterInfoFromToken()
                              ?? throw new InvalidOperationException("Authentication failed");;
         
-        var barExists = await BarExistsInFranchiseAsync(franchiseId, id, dbContext, cancellationToken);
-        if (!barExists)
+        var bar = await dbContext.Bars
+            .AsNoTracking()
+            .Where(b => b.FranchiseId == franchiseId && b.Id == id)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (bar is null)
             return Results.NotFound("Bar not found in the specified franchise.");
+        if(!bar.HasSupplyLeft)
+            return Results.BadRequest("The bar has no supply left - you can't add more ingredients.");
         
         // todo retrieve video info
         
@@ -159,6 +165,8 @@ public static class BarEndpoints
             .FirstOrDefaultAsync(cancellationToken);
         if (bar is null)
             return Results.NotFound("Bar not found in the specified franchise.");
+        if(!bar.HasSupplyLeft)
+            return Results.BadRequest("The bar has no supply left - you can't open the bar.");
         
         bar.IsOpen = true;
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -194,16 +202,5 @@ public static class BarEndpoints
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Results.NoContent();
-    }
-    
-    private static Task<bool> BarExistsInFranchiseAsync(
-        Guid franchiseId,
-        Guid barId,
-        CoffeeTunesDbContext dbContext,
-        CancellationToken cancellationToken)
-    {
-        return dbContext.Bars
-            .AsNoTracking()
-            .AnyAsync(b => b.FranchiseId == franchiseId && b.Id == barId, cancellationToken);
     }
 }
