@@ -167,11 +167,18 @@
             // Out of supply bars: HasSupplyLeft = false (these are never open)
             outOfSupplyBars = allBars.Where(b => !b.HasSupplyLeft).ToList();
         }
-        catch (Exception)
+        catch (HttpRequestException)
+        {
+            errorMessage = "Unable to connect to the server. Please check your connection and try again.";
+            franchise = null;
+            allBars = new();
+        }
+        catch (Exception ex)
         {
             errorMessage = "Unable to load franchise details. Please try again later.";
             franchise = null;
             allBars = new();
+            Console.Error.WriteLine($"Error loading franchise data: {ex.Message}");
         }
         finally
         {
