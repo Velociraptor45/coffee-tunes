@@ -10,8 +10,8 @@ var api = builder.AddProject<Projects.CoffeeTunes_WebApi>("api")
     .WithReference(postgres, "Postgres")
     .WaitFor(postgres);
 
-// builder.AddProject<Projects.CoffeeTunes_Frontend>("frontend")
-//     .WithReference(api)
-//     .WaitFor(api);
+builder.AddProject<Projects.CoffeeTunes_Frontend>("frontend")
+    .WithReference(api)
+    .WaitFor(api);
 
 builder.Build().Run();

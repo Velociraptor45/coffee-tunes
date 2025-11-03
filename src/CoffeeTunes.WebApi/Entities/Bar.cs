@@ -12,4 +12,11 @@ public class Bar
     public required string Topic { get; set; }
 
     public required bool IsOpen { get; set; }
+
+    public required bool HasSupplyLeft { get; set; }
+    
+    public required Guid FranchiseId { get; set; }
+    
+    [ForeignKey(nameof(FranchiseId))]
+    public Franchise? Franchise { get; set; }
 }

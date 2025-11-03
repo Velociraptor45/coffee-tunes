@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using CoffeeTunes.Contracts.Franchise;
 using CoffeeTunes.WebApi.Contexts;
 using CoffeeTunes.WebApi.Entities;
@@ -17,7 +16,8 @@ public static class FranchiseEndpoints
         endpoints
             .RegisterCreateFranchise()
             .RegisterGetFranchise()
-            .RegisterGetAllFranchises();
+            .RegisterGetAllFranchises()
+            .RegisterJoinFranchise();
     }
 
     private static IEndpointRouteBuilder RegisterCreateFranchise(this IEndpointRouteBuilder builder)
@@ -123,7 +123,7 @@ public static class FranchiseEndpoints
         [FromServices] FranchiseAccessService franchiseAccessService,
         CancellationToken cancellationToken)
     {
-        var (hipsterId, _) = franchiseAccessService.GetHipsterInfoFromToken() 
+        var (hipsterId, _) = franchiseAccessService.GetHipsterInfoFromToken()
                              ?? throw new InvalidOperationException("Authentication failed");
         
         var franchise = await dbContext.Franchises
