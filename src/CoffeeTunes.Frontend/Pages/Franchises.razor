@@ -20,6 +20,15 @@
             <p>Brewing your franchises...</p>
         </div>
     }
+    else if (errorMessage != null)
+    {
+        <div class="error-state">
+            <div class="error-icon">⚠️</div>
+            <h2>Oops! Something went wrong</h2>
+            <p>@errorMessage</p>
+            <button class="retry-button" @onclick="LoadFranchises">Try Again</button>
+        </div>
+    }
     else if (franchises == null || !franchises.Any())
     {
         <div class="empty-state">
@@ -52,15 +61,25 @@
 
     private List<FranchiseOverviewContract>? franchises;
     private bool isLoading = true;
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadFranchises();
+    }
+
+    private async Task LoadFranchises()
+    {
+        isLoading = true;
+        errorMessage = null;
+        
         try
         {
             franchises = await Api.GetAllFranchises();
         }
         catch (Exception)
         {
+            errorMessage = "Unable to load franchises. Please try again later.";
             franchises = new List<FranchiseOverviewContract>();
         }
         finally
