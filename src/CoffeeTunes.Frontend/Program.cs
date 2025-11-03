@@ -14,12 +14,12 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-
-
 AddSecurity(builder);
 ConfigureHttpClient(builder);
 
-await builder.Build().RunAsync();
+var app = builder.Build();
+
+await app.RunAsync();
 return;
 
 static void AddSecurity(WebAssemblyHostBuilder builder)
@@ -39,9 +39,8 @@ static void AddSecurity(WebAssemblyHostBuilder builder)
         opt.UserOptions.NameClaim = authConfig.NameClaimIdentifier;
         opt.UserOptions.RoleClaim = authConfig.RoleClaimIdentifier;
         opt.UserOptions.ScopeClaim = authConfig.ScopeClaimIdentifier;
-
     }).AddAccountClaimsPrincipalFactory<ArrayClaimsPrincipalFactory<RemoteUserAccount>>();
-    
+
     builder.Services.AddAuthorizationCore(cfg =>
     {
         cfg.AddPolicy("User", new AuthorizationPolicyBuilder()
@@ -60,21 +59,18 @@ static void ConfigureHttpClient(WebAssemblyHostBuilder builder)
     if (string.IsNullOrWhiteSpace(connectionConfig.ApiUri))
         throw new InvalidOperationException("The Api-Url is missing in the configuration");
 
-    var uri = new Uri(connectionConfig.ApiUri);
-    var httpClientBuilder = builder.Services.AddHttpClient("Api", client => client.BaseAddress = uri);
-
     builder.Services.AddScoped<CustomAddressAuthorizationMessageHandler>();
-    httpClientBuilder.AddHttpMessageHandler<CustomAddressAuthorizationMessageHandler>();
 
-    builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("Api"));
-    
-    builder.Services.AddRestEaseClient<ICoffeeTunesApi>(connectionConfig.ApiUri, opt =>
-    {
-        opt.JsonSerializerSettings = new JsonSerializerSettings
+    builder.Services.AddRestEaseClient<ICoffeeTunesApi>(
+        connectionConfig.ApiUri,
+        opt =>
         {
-            NullValueHandling = NullValueHandling.Ignore,
-            ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            DateFormatHandling = DateFormatHandling.IsoDateFormat
-        };
-    });
+            opt.JsonSerializerSettings = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                DateFormatHandling = DateFormatHandling.IsoDateFormat
+            };
+        })
+        .AddHttpMessageHandler<CustomAddressAuthorizationMessageHandler>();
 }
