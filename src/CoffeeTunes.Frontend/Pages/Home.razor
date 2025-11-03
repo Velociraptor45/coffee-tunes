@@ -1,16 +1,28 @@
 ﻿@page "/"
-@using Microsoft.AspNetCore.Components.Authorization
 
-<PageTitle>Coffee Tunes - Take a break</PageTitle>
+<PageTitle>Coffee Tunes - Login</PageTitle>
 
-<CascadingAuthenticationState>
-    <AuthorizeView>
-        <Authorized>
-            <RedirectToFranchises />
-        </Authorized>
-        <NotAuthorized>
-            <RedirectToLogin />
-        </NotAuthorized>
-    </AuthorizeView>
-</CascadingAuthenticationState>
+<div class="login-container">
+    <div class="login-card">
+        <div class="coffee-logo">
+            <div class="coffee-cup">☕</div>
+        </div>
+        <h1 class="login-title">Coffee Tunes</h1>
+        <p class="login-subtitle">Take a break, share some tunes</p>
+        <button class="btn-login" @onclick="BeginLogin">
+            <span class="btn-icon">🎵</span>
+            <span class="btn-text">Login</span>
+        </button>
+    </div>
+</div>
+
+@code {
+    [Inject]
+    public NavigationManager Navigation { get; set; } = default!;
+
+    private void BeginLogin()
+    {
+        Navigation.NavigateTo("authentication/login");
+    }
+}
 
