@@ -1,0 +1,52 @@
+@page "/authentication/{action}"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+<RemoteAuthenticatorView Action="@Action">
+    <LoggingIn>
+        <div class="auth-container">
+            <div class="coffee-loader">☕</div>
+            <p>Brewing your session...</p>
+        </div>
+    </LoggingIn>
+    <LogInFailed>
+        <div class="auth-container">
+            <div class="error-icon">⚠️</div>
+            <h2>Login Failed</h2>
+            <p>Something went wrong while trying to log you in.</p>
+            <a href="/login" class="retry-link">Try Again</a>
+        </div>
+    </LogInFailed>
+    <CompletingLoggingIn>
+        <div class="auth-container">
+            <div class="coffee-loader">☕</div>
+            <p>Completing login...</p>
+        </div>
+    </CompletingLoggingIn>
+    <CompletingLogOut>
+        <div class="auth-container">
+            <div class="coffee-loader">☕</div>
+            <p>Logging out...</p>
+        </div>
+    </CompletingLogOut>
+    <LogOutSucceeded>
+        <div class="auth-container">
+            <div class="success-icon">✓</div>
+            <h2>Logged Out</h2>
+            <p>You have been successfully logged out.</p>
+            <a href="/login" class="retry-link">Login Again</a>
+        </div>
+    </LogOutSucceeded>
+    <LogOutFailed>
+        <div class="auth-container">
+            <div class="error-icon">⚠️</div>
+            <h2>Logout Failed</h2>
+            <p>Something went wrong while trying to log you out.</p>
+            <a href="/login" class="retry-link">Back to Login</a>
+        </div>
+    </LogOutFailed>
+</RemoteAuthenticatorView>
+
+@code {
+    [Parameter]
+    public string? Action { get; set; }
+}

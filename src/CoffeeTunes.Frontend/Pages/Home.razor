@@ -1,4 +1,19 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
 
 <PageTitle>Coffee Tunes - Take a break</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        @{ Navigation.NavigateTo("/franchises", true); }
+    </Authorized>
+    <NotAuthorized>
+        @{ Navigation.NavigateTo("/login", true); }
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject]
+    public NavigationManager Navigation { get; set; } = default!;
+}
 
