@@ -125,13 +125,10 @@
 }
 
 .create-bar-button {
-    position: absolute;
-    right: 0;
-    top: 2rem;
     background: linear-gradient(135deg, #6d4c41 0%, #5d4037 100%);
     color: white;
     border: none;
-    padding: 0.75rem 1.5rem;
+    padding: 0.875rem 2rem;
     font-size: 1rem;
     border-radius: 50px;
     cursor: pointer;
@@ -140,6 +137,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    margin-top: 1rem;
     box-shadow: 0 4px 15px rgba(109, 76, 65, 0.4);
 }
 
