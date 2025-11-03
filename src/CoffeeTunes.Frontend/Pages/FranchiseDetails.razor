@@ -34,6 +34,10 @@
                     </button>
                     <h1 class="franchise-title">🏪 @franchise.Name</h1>
                     <p class="franchise-subtitle">Your coffee bar collection</p>
+                    <button class="create-bar-button" @onclick="OpenCreateBarModal">
+                        <span class="button-icon">☕</span>
+                        <span>Create New Bar</span>
+                    </button>
                 </div>
 
                 @if (openBars.Any() || inSupplyBars.Any())
@@ -111,6 +115,12 @@
                 }
             }
         </div>
+
+        <CreateBarModal 
+            IsVisible="@showCreateBarModal" 
+            FranchiseId="@FranchiseId"
+            OnClose="@CloseCreateBarModal" 
+            OnBarCreated="@HandleBarCreated" />
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -135,6 +145,7 @@
     private bool isLoading = true;
     private string? errorMessage;
     private bool showOutOfSupply = false;
+    private bool showCreateBarModal = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -199,5 +210,20 @@
     private void ToggleOutOfSupply()
     {
         showOutOfSupply = !showOutOfSupply;
+    }
+
+    private void OpenCreateBarModal()
+    {
+        showCreateBarModal = true;
+    }
+
+    private void CloseCreateBarModal()
+    {
+        showCreateBarModal = false;
+    }
+
+    private async Task HandleBarCreated()
+    {
+        await LoadFranchiseData();
     }
 }

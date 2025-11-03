@@ -1,0 +1,172 @@
+@using CoffeeTunes.Contracts
+@using CoffeeTunes.Contracts.Bars
+
+<div class="modal-backdrop @(IsVisible ? "show" : "")" @onclick="OnBackdropClick">
+    <div class="modal-content" @onclick:stopPropagation="true">
+        <div class="modal-header">
+            <h2 class="modal-title">☕ Create New Bar</h2>
+            <button class="modal-close" @onclick="Close">✕</button>
+        </div>
+        
+        @if (errorMessage != null)
+        {
+            <div class="modal-error">
+                <div class="error-icon">⚠️</div>
+                <p>@errorMessage</p>
+            </div>
+        }
+
+        <div class="modal-body">
+            <form @onsubmit="HandleSubmit">
+                <div class="form-group">
+                    <label for="bar-topic">Bar Topic</label>
+                    <input 
+                        id="bar-topic"
+                        type="text" 
+                        class="form-input" 
+                        @bind="topic" 
+                        placeholder="Enter a coffee-themed topic..."
+                        maxlength="100"
+                        disabled="@isSubmitting"
+                        required />
+                </div>
+
+                <div class="form-group">
+                    <label for="max-ingredients">
+                        Max Ingredients Per Hipster
+                        <span class="help-text">(1-30, default: 5)</span>
+                    </label>
+                    <input 
+                        id="max-ingredients"
+                        type="number" 
+                        class="form-input" 
+                        @bind="maxIngredientsPerHipster" 
+                        min="1"
+                        max="30"
+                        disabled="@isSubmitting"
+                        required />
+                    @if (maxIngredientsPerHipster < 1 || maxIngredientsPerHipster > 30)
+                    {
+                        <div class="validation-message">
+                            Please enter a value between 1 and 30
+                        </div>
+                    }
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" @onclick="Close" disabled="@isSubmitting">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-create" disabled="@(isSubmitting || string.IsNullOrWhiteSpace(topic) || maxIngredientsPerHipster < 1 || maxIngredientsPerHipster > 30)">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner">☕</span>
+                            <span>Creating...</span>
+                        }
+                        else
+                        {
+                            <span>Create Bar</span>
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback OnBarCreated { get; set; }
+
+    [Parameter]
+    public Guid FranchiseId { get; set; }
+
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+
+    private string topic = string.Empty;
+    private uint maxIngredientsPerHipster = 5;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(topic) || maxIngredientsPerHipster < 1 || maxIngredientsPerHipster > 30)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            var contract = new CreateBarContract
+            {
+                Topic = topic.Trim(),
+                MaxIngredientsPerHipster = maxIngredientsPerHipster
+            };
+
+            var response = await Api.CreateBar(FranchiseId, contract);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                await OnBarCreated.InvokeAsync();
+                ResetForm();
+                await OnClose.InvokeAsync();
+            }
+            else
+            {
+                var statusCode = (int)response.StatusCode;
+                errorMessage = statusCode switch
+                {
+                    400 => "Invalid bar details. Please check your input and try again.",
+                    401 or 403 => "You don't have permission to create a bar.",
+                    409 => "A bar with this topic already exists in this franchise.",
+                    _ => $"Failed to create bar (Error {statusCode}). Please try again."
+                };
+            }
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "Unable to connect to the server. Please check your connection and try again.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An unexpected error occurred. Please try again.";
+            Console.Error.WriteLine($"Error creating bar: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Close()
+    {
+        ResetForm();
+        OnClose.InvokeAsync();
+    }
+
+    private void OnBackdropClick()
+    {
+        if (!isSubmitting)
+        {
+            Close();
+        }
+    }
+
+    private void ResetForm()
+    {
+        topic = string.Empty;
+        maxIngredientsPerHipster = 5;
+        errorMessage = null;
+        isSubmitting = false;
+    }
+}
