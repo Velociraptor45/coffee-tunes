@@ -59,22 +59,22 @@
                 </div>
 
                 <div class="view-switcher">
-                    <button class="view-tab @(activeView == "brewing" ? "active" : "")" @onclick="@(() => SwitchView("brewing"))">
+                    <button class="view-tab @(activeView == ViewBrewing ? "active" : "")" @onclick="@(() => SwitchView(ViewBrewing))">
                         <span class="tab-icon">🔥</span>
                         <span>Brewing</span>
                     </button>
-                    <button class="view-tab @(activeView == "ingredients" ? "active" : "")" @onclick="@(() => SwitchView("ingredients"))">
+                    <button class="view-tab @(activeView == ViewIngredients ? "active" : "")" @onclick="@(() => SwitchView(ViewIngredients))">
                         <span class="tab-icon">🧪</span>
                         <span>Ingredients</span>
                     </button>
-                    <button class="view-tab @(activeView == "stats" ? "active" : "")" @onclick="@(() => SwitchView("stats"))">
+                    <button class="view-tab @(activeView == ViewStats ? "active" : "")" @onclick="@(() => SwitchView(ViewStats))">
                         <span class="tab-icon">📊</span>
                         <span>Stats</span>
                     </button>
                 </div>
 
                 <div class="view-content">
-                    @if (activeView == "brewing")
+                    @if (activeView == ViewBrewing)
                     {
                         <div class="empty-view">
                             <div class="empty-icon">🔥</div>
@@ -82,7 +82,7 @@
                             <p>Coming soon - this is where the magic happens!</p>
                         </div>
                     }
-                    else if (activeView == "ingredients")
+                    else if (activeView == ViewIngredients)
                     {
                         @if (isLoadingIngredients)
                         {
@@ -130,7 +130,7 @@
                             </div>
                         }
                     }
-                    else if (activeView == "stats")
+                    else if (activeView == ViewStats)
                     {
                         <div class="empty-view">
                             <div class="empty-icon">📊</div>
@@ -148,6 +148,10 @@
 </AuthorizeView>
 
 @code {
+    private const string ViewBrewing = "brewing";
+    private const string ViewIngredients = "ingredients";
+    private const string ViewStats = "stats";
+
     [Parameter]
     public Guid FranchiseId { get; set; }
 
@@ -166,17 +170,23 @@
     private bool isLoadingIngredients = false;
     private string? errorMessage;
     private string? ingredientsErrorMessage;
-    private string activeView = "brewing";
+    private string activeView = ViewBrewing;
+    private Guid? previousBarId;
 
     protected override async Task OnInitializedAsync()
     {
+        previousBarId = BarId;
         await LoadBarData();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        // Reload data when route parameters change
-        await LoadBarData();
+        // Reload data only when BarId changes
+        if (previousBarId != BarId)
+        {
+            previousBarId = BarId;
+            await LoadBarData();
+        }
     }
 
     private async Task LoadBarData()
@@ -189,7 +199,7 @@
             bar = await Api.GetBar(FranchiseId, BarId);
             
             // Load ingredients if we're on the ingredients view
-            if (activeView == "ingredients")
+            if (activeView == ViewIngredients)
             {
                 await LoadIngredients();
             }
@@ -242,7 +252,7 @@
         activeView = view;
         
         // Load ingredients when switching to ingredients view
-        if (view == "ingredients" && !isLoadingIngredients && ingredients.Count == 0 && ingredientsErrorMessage == null)
+        if (view == ViewIngredients && !isLoadingIngredients && !ingredients.Any() && ingredientsErrorMessage == null)
         {
             await LoadIngredients();
         }
