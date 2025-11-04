@@ -3,6 +3,7 @@ using CoffeeTunes.WebApi.Auth;
 using CoffeeTunes.WebApi.Contexts;
 using CoffeeTunes.WebApi.Endpoints;
 using CoffeeTunes.WebApi.Services;
+using CoffeeTunes.WebApi.Services.Youtube;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -23,6 +24,16 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHostedService<DatabaseMigrationBackgroundService>();
 builder.Services.AddScoped<FranchiseAccessService>();
 builder.Services.AddScoped<BarService>();
+builder.Services.AddScoped<YouTubeMetadataProvider>();
+builder.Services.AddHttpClient("YouTubeApi", client =>
+{
+    client.BaseAddress = new Uri("https://www.googleapis.com/youtube/v3/");
+});
+
+var ytOptions = new YouTubeOptions();
+builder.Configuration.Bind(ytOptions);
+builder.Services.AddSingleton(ytOptions);
+
 
 SetupSecurity();
 

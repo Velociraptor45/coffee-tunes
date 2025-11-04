@@ -3,6 +3,7 @@ using CoffeeTunes.Contracts.Ingredients;
 using CoffeeTunes.WebApi.Contexts;
 using CoffeeTunes.WebApi.Entities;
 using CoffeeTunes.WebApi.Services;
+using CoffeeTunes.WebApi.Services.Youtube;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -75,6 +76,7 @@ public static class IngredientEndpoints
         [FromBody] AddIngredientContract contract,
         [FromServices] CoffeeTunesDbContext dbContext,
         [FromServices] FranchiseAccessService franchiseAccessService,
+        [FromServices] YouTubeMetadataProvider metadataProvider,
         CancellationToken cancellationToken)
     {
         await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
@@ -90,12 +92,26 @@ public static class IngredientEndpoints
         if(!bar.HasSupplyLeft)
             return Results.BadRequest("The bar has no supply left - you can't modify ingredients.");
         
-        // todo retrieve video info
+        if (!YouTubeVideoIdParser.TryParse(contract.Url, out var videoId))
+        {
+            return TypedResults.BadRequest("Unable to extract a YouTube video identifier from the provided URL.");
+        }
+
+        var metadata = await metadataProvider.GetMetadataAsync(videoId, cancellationToken);
+        if (metadata is null)
+            return TypedResults.BadRequest("Unable to retrieve metadata for the provided YouTube video.");
+        
+        var ingredientCount = await dbContext.Ingredients
+            .AsNoTracking()
+            .Where(i => i.OwnerId == hipsterId && i.BarId == bar.Id)
+            .CountAsync(cancellationToken);
+        if (ingredientCount >= bar.MaxIngredientsPerHipster)
+            return Results.BadRequest($"You have reached the maximum number of ingredients ({bar.MaxIngredientsPerHipster}) for this bar.");
         
         var ingredient = new Ingredient
         {
             Id = Guid.CreateVersion7(),
-            Name = "My Cool YT video",
+            Name = metadata.Title ?? "Dummy",
             Url = contract.Url,
             Used = false,
             OwnerId = hipsterId,
