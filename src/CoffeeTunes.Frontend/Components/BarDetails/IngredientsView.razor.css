@@ -60,6 +60,7 @@
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     border: 3px solid #8d6e63;
     position: relative;
+    overflow: hidden;
 }
 
 .ingredient-card:hover {
@@ -72,6 +73,25 @@
     border-color: #4caf50;
 }
 
+.ingredient-thumbnail {
+    width: 100%;
+    height: 180px;
+    margin-bottom: 1rem;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #d7ccc8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ingredient-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
 .ingredient-icon {
     font-size: 3rem;
     margin-bottom: 1rem;
@@ -82,6 +102,12 @@
     font-size: 1.3rem;
     margin-bottom: 1rem;
     font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    min-height: 2.6rem;
 }
 
 .ingredient-url {
@@ -91,9 +117,9 @@
 .ingredient-url a {
     color: #6d4c41;
     font-size: 0.9rem;
-    word-break: break-all;
     text-decoration: none;
     transition: color 0.3s ease;
+    font-weight: 500;
 }
 
 .ingredient-url a:hover {
@@ -112,6 +138,36 @@
     font-size: 0.75rem;
     font-weight: 700;
     box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    z-index: 10;
+}
+
+.delete-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.4);
+    z-index: 10;
+}
+
+.delete-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(211, 47, 47, 0.6);
+}
+
+.delete-button:active {
+    transform: scale(0.95);
 }
 
 .loading-container {
@@ -217,5 +273,9 @@
     .max-ingredients-info {
         flex-direction: column;
         text-align: center;
+    }
+
+    .ingredient-thumbnail {
+        height: 200px;
     }
 }

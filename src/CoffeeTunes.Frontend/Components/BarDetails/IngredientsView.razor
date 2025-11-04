@@ -43,16 +43,24 @@ else
             @foreach (var ingredient in Ingredients)
             {
                 <div class="ingredient-card @(ingredient.Used ? "used" : "")">
-                    <div class="ingredient-icon">🎵</div>
+                    <div class="ingredient-thumbnail">
+                        <img src="@ingredient.ThumbnailUrl" alt="@ingredient.Name" />
+                    </div>
                     <h3 class="ingredient-name">@ingredient.Name</h3>
                     <div class="ingredient-url">
                         <a href="@ingredient.Url" target="_blank" rel="noopener noreferrer">
-                            @ingredient.Url
+                            Watch on YouTube
                         </a>
                     </div>
                     @if (ingredient.Used)
                     {
                         <div class="ingredient-badge">✓ USED</div>
+                    }
+                    else if (Bar.HasSupplyLeft)
+                    {
+                        <button class="delete-button" @onclick="@(() => RemoveIngredient(ingredient))" title="Remove ingredient">
+                            🗑️
+                        </button>
                     }
                 </div>
             }
@@ -97,6 +105,9 @@ else
     [Parameter]
     public EventCallback OnIngredientAdded { get; set; }
 
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+
     private bool showAddModal = false;
 
     private void OpenAddModal()
@@ -113,5 +124,24 @@ else
     {
         showAddModal = false;
         await OnIngredientAdded.InvokeAsync();
+    }
+
+    private async Task RemoveIngredient(IngredientContract ingredient)
+    {
+        if (ingredient.Used)
+        {
+            return; // Safety check - should not happen as button is hidden
+        }
+
+        try
+        {
+            await Api.RemoveIngredient(FranchiseId, Bar.Id, ingredient.Id);
+            await OnIngredientAdded.InvokeAsync(); // Reuse the same callback to refresh the list
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error removing ingredient: {ex.Message}");
+            // Could add error handling UI here if needed
+        }
     }
 }
