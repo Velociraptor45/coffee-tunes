@@ -9,7 +9,8 @@ public class Ingredient
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public required Guid Id { get; set; }
 
-    public Guid OwnerId { get; set; }
+    public required Guid OwnerId { get; set; }
+    public required Guid BarId { get; set; }
     
     public required string Url { get; set; }
     public required string Name { get; set; }
@@ -21,4 +22,7 @@ public class Ingredient
     
     [ForeignKey(nameof(OwnerId))]
     public Hipster? Owner { get; set; }
+    
+    [ForeignKey(nameof(BarId))]
+    public Bar? Bar { get; set; }
 }

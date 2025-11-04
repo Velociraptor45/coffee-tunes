@@ -22,6 +22,7 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddHostedService<DatabaseMigrationBackgroundService>();
 builder.Services.AddScoped<FranchiseAccessService>();
+builder.Services.AddScoped<BarService>();
 
 SetupSecurity();
 
@@ -67,6 +68,7 @@ app.UseAuthorization();
 
 app.RegisterFranchiseEndpoints();
 app.RegisterBarEndpoints();
+app.RegisterIngredientEndpoints();
 
 await app.RunAsync();
 

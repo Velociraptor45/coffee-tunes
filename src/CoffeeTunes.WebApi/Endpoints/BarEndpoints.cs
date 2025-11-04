@@ -21,7 +21,6 @@ public static class BarEndpoints
             .RegisterCreateBar()
             .RegisterGetBar()
             .RegisterGetAllBars()
-            .RegisterAddIngredient()
             .RegisterOpenBar()
             .RegisterCloseBar();
     }
@@ -130,52 +129,6 @@ public static class BarEndpoints
 
 
         return Results.Ok(bar);
-    }
-
-    private static IEndpointRouteBuilder RegisterAddIngredient(this IEndpointRouteBuilder builder)
-    {
-        builder.MapPost($"/{_routeBase}/{{id:guid}}/ingredient", AddIngredient)
-            .WithName(nameof(AddIngredient))
-            .RequireAuthorization("User");
-
-        return builder;
-    }
-    
-    private static async Task<IResult> AddIngredient(
-        [FromRoute] Guid franchiseId,
-        [FromRoute] Guid id,
-        [FromBody] AddIngredientContract contract,
-        [FromServices] CoffeeTunesDbContext dbContext,
-        [FromServices] FranchiseAccessService franchiseAccessService,
-        CancellationToken cancellationToken)
-    {
-        await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
-        var (hipsterId, _) = franchiseAccessService.GetHipsterInfoFromToken()
-                             ?? throw new InvalidOperationException("Authentication failed");;
-        
-        var bar = await dbContext.Bars
-            .AsNoTracking()
-            .Where(b => b.FranchiseId == franchiseId && b.Id == id)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (bar is null)
-            return Results.NotFound("Bar not found in the specified franchise.");
-        if(!bar.HasSupplyLeft)
-            return Results.BadRequest("The bar has no supply left - you can't add more ingredients.");
-        
-        // todo retrieve video info
-        
-        var ingredient = new Ingredient
-        {
-            Id = Guid.CreateVersion7(),
-            Name = "My Cool YT video",
-            Url = contract.Url,
-            Used = false,
-            OwnerId = hipsterId
-        };
-        dbContext.Ingredients.Add(ingredient);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Results.NoContent();
     }
 
     private static IEndpointRouteBuilder RegisterOpenBar(this IEndpointRouteBuilder builder)
