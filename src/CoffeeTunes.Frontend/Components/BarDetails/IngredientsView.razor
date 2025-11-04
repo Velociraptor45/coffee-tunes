@@ -1,0 +1,147 @@
+@using CoffeeTunes.Contracts
+@using CoffeeTunes.Contracts.Bars
+@using CoffeeTunes.Contracts.Ingredients
+
+@if (IsLoading)
+{
+    <div class="loading-container">
+        <div class="coffee-loader">☕</div>
+        <p>Loading your ingredients...</p>
+    </div>
+}
+else if (ErrorMessage != null)
+{
+    <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <h2>Failed to load ingredients</h2>
+        <p>@ErrorMessage</p>
+        <button class="retry-button" @onclick="OnRetry">Try Again</button>
+    </div>
+}
+else
+{
+    @if (Bar.HasSupplyLeft && Ingredients.Count < Bar.MaxIngredientsPerHipster)
+    {
+        <div class="add-ingredient-section">
+            <button class="add-ingredient-button" @onclick="OpenAddModal">
+                <span class="button-icon">➕</span>
+                <span>Add Ingredient (@Ingredients.Count/@Bar.MaxIngredientsPerHipster)</span>
+            </button>
+        </div>
+    }
+    else if (Ingredients.Count >= Bar.MaxIngredientsPerHipster)
+    {
+        <div class="max-ingredients-info">
+            <span class="info-icon">ℹ️</span>
+            <span>You have submitted the maximum number of ingredients (@Bar.MaxIngredientsPerHipster) for this bar.</span>
+        </div>
+    }
+
+    @if (Ingredients.Any())
+    {
+        <div class="ingredients-grid">
+            @foreach (var ingredient in Ingredients)
+            {
+                <div class="ingredient-card @(ingredient.Used ? "used" : "")">
+                    <div class="ingredient-thumbnail">
+                        <img src="@ingredient.ThumbnailUrl" alt="@ingredient.Name" />
+                    </div>
+                    <h3 class="ingredient-name">@ingredient.Name</h3>
+                    <div class="ingredient-url">
+                        <a href="@ingredient.Url" target="_blank" rel="noopener noreferrer">
+                            Watch on YouTube
+                        </a>
+                    </div>
+                    @if (ingredient.Used)
+                    {
+                        <div class="ingredient-badge">✓ USED</div>
+                    }
+                    else if (Bar.HasSupplyLeft)
+                    {
+                        <button class="delete-button" @onclick="@(() => RemoveIngredient(ingredient))" title="Remove ingredient">
+                            🗑️
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-view">
+            <div class="empty-icon">🧪</div>
+            <h2>No Ingredients Yet</h2>
+            <p>You haven't submitted any ingredients to this bar yet.</p>
+        </div>
+    }
+}
+
+<AddIngredientModal
+    IsVisible="@showAddModal"
+    Bar="@Bar"
+    FranchiseId="@FranchiseId"
+    OnClose="@CloseAddModal"
+    OnIngredientAdded="@HandleIngredientAdded" />
+
+@code {
+    [Parameter]
+    public required BarContract Bar { get; set; }
+
+    [Parameter]
+    public required Guid FranchiseId { get; set; }
+
+    [Parameter]
+    public required List<IngredientContract> Ingredients { get; set; }
+
+    [Parameter]
+    public required bool IsLoading { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter]
+    public EventCallback OnRetry { get; set; }
+
+    [Parameter]
+    public EventCallback OnIngredientAdded { get; set; }
+
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+
+    private bool showAddModal = false;
+
+    private void OpenAddModal()
+    {
+        showAddModal = true;
+    }
+
+    private void CloseAddModal()
+    {
+        showAddModal = false;
+    }
+
+    private async Task HandleIngredientAdded()
+    {
+        showAddModal = false;
+        await OnIngredientAdded.InvokeAsync();
+    }
+
+    private async Task RemoveIngredient(IngredientContract ingredient)
+    {
+        if (ingredient.Used)
+        {
+            return; // Safety check - should not happen as button is hidden
+        }
+
+        try
+        {
+            await Api.RemoveIngredient(FranchiseId, Bar.Id, ingredient.Id);
+            await OnIngredientAdded.InvokeAsync(); // Reuse the same callback to refresh the list
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error removing ingredient: {ex.Message}");
+            // Could add error handling UI here if needed
+        }
+    }
+}

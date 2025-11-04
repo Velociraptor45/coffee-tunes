@@ -1,0 +1,26 @@
+<div class="view-switcher">
+    <button class="view-tab @(ActiveView == ViewBrewing ? "active" : "")" @onclick="@(() => OnViewChange.InvokeAsync(ViewBrewing))">
+        <span class="tab-icon">🔥</span>
+        <span>Brewing</span>
+    </button>
+    <button class="view-tab @(ActiveView == ViewIngredients ? "active" : "")" @onclick="@(() => OnViewChange.InvokeAsync(ViewIngredients))">
+        <span class="tab-icon">🧪</span>
+        <span>Ingredients</span>
+    </button>
+    <button class="view-tab @(ActiveView == ViewStats ? "active" : "")" @onclick="@(() => OnViewChange.InvokeAsync(ViewStats))">
+        <span class="tab-icon">📊</span>
+        <span>Stats</span>
+    </button>
+</div>
+
+@code {
+    public const string ViewBrewing = "brewing";
+    public const string ViewIngredients = "ingredients";
+    public const string ViewStats = "stats";
+
+    [Parameter]
+    public required string ActiveView { get; set; }
+
+    [Parameter]
+    public required EventCallback<string> OnViewChange { get; set; }
+}

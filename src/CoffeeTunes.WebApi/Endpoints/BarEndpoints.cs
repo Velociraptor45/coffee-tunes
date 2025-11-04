@@ -123,7 +123,8 @@ public static class BarEndpoints
                 Id = b.Id,
                 Topic = b.Topic,
                 IsOpen = b.IsOpen,
-                HasSupplyLeft = b.HasSupplyLeft
+                HasSupplyLeft = b.HasSupplyLeft,
+                MaxIngredientsPerHipster = b.MaxIngredientsPerHipster
             })
             .FirstOrDefaultAsync(cancellationToken);
 

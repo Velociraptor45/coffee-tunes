@@ -1,0 +1,40 @@
+@using CoffeeTunes.Contracts.Bars
+
+<div class="bar-header">
+    <button class="back-button" @onclick="OnBackClick">
+        <span class="back-icon">←</span>
+        <span>Back to Bars</span>
+    </button>
+    <h1 class="bar-title">☕ @Bar.Topic</h1>
+    <div class="bar-status">
+        @if (Bar.IsOpen)
+        {
+            <span class="status-badge open-badge">
+                <span class="status-icon">🔥</span>
+                <span>OPEN</span>
+            </span>
+        }
+        else if (Bar.HasSupplyLeft)
+        {
+            <span class="status-badge supply-badge">
+                <span class="status-icon">📦</span>
+                <span>IN SUPPLY</span>
+            </span>
+        }
+        else
+        {
+            <span class="status-badge empty-badge">
+                <span class="status-icon">🚫</span>
+                <span>OUT OF SUPPLY</span>
+            </span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public required BarContract Bar { get; set; }
+
+    [Parameter]
+    public EventCallback OnBackClick { get; set; }
+}

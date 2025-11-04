@@ -47,13 +47,13 @@ public static class IngredientEndpoints
         
         var ingredients = await dbContext.Ingredients
             .AsNoTracking()
-            .Where(i => i.OwnerId == hipsterId && i.BarId == bar.Id)
+            .Where(i => i.Owners!.Any(o => o.HipsterId == hipsterId) && i.BarId == bar.Id)
             .Select(i => new IngredientContract
             {
                 Id = i.Id,
-                OwnerId = i.OwnerId,
                 Name = i.Name,
                 Url = i.Url,
+                ThumbnailUrl = i.ThumbnailUrl,
                 Used = i.Used
             })
             .ToListAsync(cancellationToken);
@@ -98,26 +98,48 @@ public static class IngredientEndpoints
         }
 
         var metadata = await metadataProvider.GetMetadataAsync(videoId, cancellationToken);
-        if (metadata is null)
+        if (metadata is null || string.IsNullOrWhiteSpace(metadata.Title) || string.IsNullOrWhiteSpace(metadata.ThumbnailUrl))
             return TypedResults.BadRequest("Unable to retrieve metadata for the provided YouTube video.");
         
         var ingredientCount = await dbContext.Ingredients
             .AsNoTracking()
-            .Where(i => i.OwnerId == hipsterId && i.BarId == bar.Id)
+            .Where(i => i.Owners!.Any(o => o.HipsterId == hipsterId) && i.BarId == bar.Id)
             .CountAsync(cancellationToken);
         if (ingredientCount >= bar.MaxIngredientsPerHipster)
             return Results.BadRequest($"You have reached the maximum number of ingredients ({bar.MaxIngredientsPerHipster}) for this bar.");
         
-        var ingredient = new Ingredient
+        var ingredient = await dbContext.Ingredients
+            .AsNoTracking()
+            .Include(i => i.Owners)
+            .Where(i => i.BarId == bar.Id && i.VideoId == videoId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (ingredient is null)
         {
-            Id = Guid.CreateVersion7(),
-            Name = metadata.Title ?? "Dummy",
-            Url = contract.Url,
-            Used = false,
-            OwnerId = hipsterId,
-            BarId = bar.Id
+            ingredient = new Ingredient
+            {
+                Id = Guid.CreateVersion7(),
+                Name = metadata.Title,
+                ThumbnailUrl = metadata.ThumbnailUrl,
+                Url = contract.Url,
+                VideoId = videoId,
+                Used = false,
+                BarId = bar.Id,
+                Owners = []
+            };
+            dbContext.Ingredients.Add(ingredient);
+        }
+        
+        if(ingredient.Owners!.Any(o => o.HipsterId == hipsterId))
+            return Results.Conflict("You have already added this ingredient to the bar.");
+
+        var owner = new HipstersSubmittedIngredient
+        {
+            HipsterId = hipsterId,
+            IngredientId = ingredient.Id
         };
-        dbContext.Ingredients.Add(ingredient);
+        dbContext.HipstersSubmittedIngredients.Add(owner);
+        
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Results.NoContent();
@@ -148,13 +170,22 @@ public static class IngredientEndpoints
         var bar = await barService.GetInSupplyBar(barId, franchiseId, cancellationToken);
         
         var ingredient = await dbContext.Ingredients
-            .Where(i => i.Id == id && i.OwnerId == hipsterId && i.BarId == bar.Id)
+            .Include(i => i.Owners)
+            .Where(i => i.Id == id && i.Owners!.Any(o => o.HipsterId == hipsterId) && i.BarId == bar.Id)
             .FirstOrDefaultAsync(cancellationToken);
         
         if (ingredient is null)
             return Results.NotFound("Ingredient not found.");
         
-        dbContext.Ingredients.Remove(ingredient);
+        if(ingredient.Owners!.Count == 1)
+        {
+            // Last owner - remove the ingredient
+            dbContext.Ingredients.Remove(ingredient);
+        }
+        
+        var owner = ingredient.Owners!.First(o => o.HipsterId == hipsterId);
+        dbContext.HipstersSubmittedIngredients.Remove(owner);
+        
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Results.NoContent();

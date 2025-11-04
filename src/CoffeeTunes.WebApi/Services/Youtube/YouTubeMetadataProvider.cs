@@ -6,7 +6,7 @@ public sealed record YouTubeVideoMetadata(string? Title, string? ThumbnailUrl);
 
 public sealed class YouTubeMetadataProvider(
     IHttpClientFactory httpClientFactory,
-    IOptions<YouTubeOptions> options,
+    YouTubeOptions options,
     ILogger<YouTubeMetadataProvider> logger)
 {
     public async Task<YouTubeVideoMetadata?> GetMetadataAsync(string videoId, CancellationToken cancellationToken)
@@ -14,7 +14,7 @@ public sealed class YouTubeMetadataProvider(
         if (string.IsNullOrWhiteSpace(videoId))
             return null;
 
-        var apiKey = options.Value.ApiKey;
+        var apiKey = options.ApiKey;
         if (string.IsNullOrWhiteSpace(apiKey))
             return null;
 
@@ -22,8 +22,7 @@ public sealed class YouTubeMetadataProvider(
         {
             using var httpClient = httpClientFactory.CreateClient("YouTubeApi");
             using var response = await httpClient
-                .GetAsync($"videos?part=snippet&id={videoId}&key={apiKey}", cancellationToken)
-                .ConfigureAwait(false);
+                .GetAsync($"videos?part=snippet&id={videoId}&key={apiKey}", cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -35,8 +34,7 @@ public sealed class YouTubeMetadataProvider(
             }
 
             var payload = await response.Content
-                .ReadFromJsonAsync<YouTubeVideosResponse>(cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
+                .ReadFromJsonAsync<YouTubeVideosResponse>(cancellationToken: cancellationToken);
 
             if (payload?.Items is not { Length: > 0 } items)
                 return null;

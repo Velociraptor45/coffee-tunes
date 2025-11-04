@@ -1,0 +1,92 @@
+.bar-details-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f5dc 0%, #d7ccc8 100%);
+    padding: 2rem;
+}
+
+.loading-container {
+    text-align: center;
+    padding: 4rem 0;
+}
+
+.coffee-loader {
+    font-size: 4rem;
+    animation: spin 2s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-container p {
+    color: #6d4c41;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+}
+
+.error-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.error-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+    color: #ff9800;
+}
+
+.error-state h2 {
+    color: #3e2723;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.error-state p {
+    color: #6d4c41;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+.retry-button {
+    background: linear-gradient(135deg, #6d4c41 0%, #5d4037 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(109, 76, 65, 0.4);
+    font-weight: 600;
+}
+
+.retry-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(109, 76, 65, 0.6);
+}
+
+.view-content {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    min-height: 400px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .bar-details-container {
+        padding: 1rem;
+    }
+
+    .view-content {
+        padding: 1.5rem;
+    }
+}

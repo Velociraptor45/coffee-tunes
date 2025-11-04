@@ -14,6 +14,7 @@ public class CoffeeTunesDbContext : DbContext
     public DbSet<Hipster> Hipsters { get; set; }
     public DbSet<HipstersInFranchise> HipstersInFranchises { get; set; }
     public DbSet<Ingredient> Ingredients { get; set; }
+    public DbSet<HipstersSubmittedIngredient> HipstersSubmittedIngredients { get; set; }
     public DbSet<Bean> Beans { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -22,5 +23,8 @@ public class CoffeeTunesDbContext : DbContext
         
         modelBuilder.Entity<HipstersInFranchise>()
             .HasKey(hic => new { hic.FranchiseId, hic.HipsterId });
+        
+        modelBuilder.Entity<HipstersSubmittedIngredient>()
+            .HasKey(hsi => new { hsi.HipsterId, hsi.IngredientId });
     }
 }
