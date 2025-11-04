@@ -3,6 +3,7 @@
 @using CoffeeTunes.Contracts
 @using CoffeeTunes.Contracts.Bars
 @using CoffeeTunes.Contracts.Ingredients
+@using CoffeeTunes.Frontend.Components.BarDetails
 
 <PageTitle>Coffee Tunes - @(bar?.Topic ?? "Bar")</PageTitle>
 
@@ -27,116 +28,29 @@
             }
             else if (bar != null)
             {
-                <div class="bar-header">
-                    <button class="back-button" @onclick="NavigateBack">
-                        <span class="back-icon">←</span>
-                        <span>Back to Bars</span>
-                    </button>
-                    <h1 class="bar-title">☕ @bar.Topic</h1>
-                    <div class="bar-status">
-                        @if (bar.IsOpen)
-                        {
-                            <span class="status-badge open-badge">
-                                <span class="status-icon">🔥</span>
-                                <span>OPEN</span>
-                            </span>
-                        }
-                        else if (bar.HasSupplyLeft)
-                        {
-                            <span class="status-badge supply-badge">
-                                <span class="status-icon">📦</span>
-                                <span>IN SUPPLY</span>
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="status-badge empty-badge">
-                                <span class="status-icon">🚫</span>
-                                <span>OUT OF SUPPLY</span>
-                            </span>
-                        }
-                    </div>
-                </div>
+                <BarHeader Bar="@bar" OnBackClick="@NavigateBack" />
 
-                <div class="view-switcher">
-                    <button class="view-tab @(activeView == ViewBrewing ? "active" : "")" @onclick="@(() => SwitchView(ViewBrewing))">
-                        <span class="tab-icon">🔥</span>
-                        <span>Brewing</span>
-                    </button>
-                    <button class="view-tab @(activeView == ViewIngredients ? "active" : "")" @onclick="@(() => SwitchView(ViewIngredients))">
-                        <span class="tab-icon">🧪</span>
-                        <span>Ingredients</span>
-                    </button>
-                    <button class="view-tab @(activeView == ViewStats ? "active" : "")" @onclick="@(() => SwitchView(ViewStats))">
-                        <span class="tab-icon">📊</span>
-                        <span>Stats</span>
-                    </button>
-                </div>
+                <ViewSwitcher ActiveView="@activeView" OnViewChange="@SwitchView" />
 
                 <div class="view-content">
-                    @if (activeView == ViewBrewing)
+                    @if (activeView == ViewSwitcher.ViewBrewing)
                     {
-                        <div class="empty-view">
-                            <div class="empty-icon">🔥</div>
-                            <h2>Brewing View</h2>
-                            <p>Coming soon - this is where the magic happens!</p>
-                        </div>
+                        <BrewingView />
                     }
-                    else if (activeView == ViewIngredients)
+                    else if (activeView == ViewSwitcher.ViewIngredients)
                     {
-                        @if (isLoadingIngredients)
-                        {
-                            <div class="loading-container">
-                                <div class="coffee-loader">☕</div>
-                                <p>Loading your ingredients...</p>
-                            </div>
-                        }
-                        else if (ingredientsErrorMessage != null)
-                        {
-                            <div class="error-state">
-                                <div class="error-icon">⚠️</div>
-                                <h2>Failed to load ingredients</h2>
-                                <p>@ingredientsErrorMessage</p>
-                                <button class="retry-button" @onclick="LoadIngredients">Try Again</button>
-                            </div>
-                        }
-                        else if (ingredients.Any())
-                        {
-                            <div class="ingredients-grid">
-                                @foreach (var ingredient in ingredients)
-                                {
-                                    <div class="ingredient-card @(ingredient.Used ? "used" : "")">
-                                        <div class="ingredient-icon">🎵</div>
-                                        <h3 class="ingredient-name">@ingredient.Name</h3>
-                                        <div class="ingredient-url">
-                                            <a href="@ingredient.Url" target="_blank" rel="noopener noreferrer">
-                                                @ingredient.Url
-                                            </a>
-                                        </div>
-                                        @if (ingredient.Used)
-                                        {
-                                            <div class="ingredient-badge">✓ USED</div>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="empty-view">
-                                <div class="empty-icon">🧪</div>
-                                <h2>No Ingredients Yet</h2>
-                                <p>You haven't submitted any ingredients to this bar yet.</p>
-                            </div>
-                        }
+                        <IngredientsView 
+                            Bar="@bar"
+                            FranchiseId="@FranchiseId"
+                            Ingredients="@ingredients"
+                            IsLoading="@isLoadingIngredients"
+                            ErrorMessage="@ingredientsErrorMessage"
+                            OnRetry="@LoadIngredients"
+                            OnIngredientAdded="@HandleIngredientAdded" />
                     }
-                    else if (activeView == ViewStats)
+                    else if (activeView == ViewSwitcher.ViewStats)
                     {
-                        <div class="empty-view">
-                            <div class="empty-icon">📊</div>
-                            <h2>Stats View</h2>
-                            <p>Coming soon - check out the stats and leaderboards!</p>
-                        </div>
+                        <StatsView />
                     }
                 </div>
             }
@@ -148,10 +62,6 @@
 </AuthorizeView>
 
 @code {
-    private const string ViewBrewing = "brewing";
-    private const string ViewIngredients = "ingredients";
-    private const string ViewStats = "stats";
-
     [Parameter]
     public Guid FranchiseId { get; set; }
 
@@ -170,7 +80,7 @@
     private bool isLoadingIngredients = false;
     private string? errorMessage;
     private string? ingredientsErrorMessage;
-    private string activeView = ViewBrewing;
+    private string activeView = ViewSwitcher.ViewBrewing;
     private Guid? previousBarId;
 
     protected override async Task OnInitializedAsync()
@@ -199,7 +109,7 @@
             bar = await Api.GetBar(FranchiseId, BarId);
             
             // Load ingredients if we're on the ingredients view
-            if (activeView == ViewIngredients)
+            if (activeView == ViewSwitcher.ViewIngredients)
             {
                 await LoadIngredients();
             }
@@ -252,10 +162,15 @@
         activeView = view;
         
         // Load ingredients when switching to ingredients view
-        if (view == ViewIngredients && !isLoadingIngredients && !ingredients.Any() && ingredientsErrorMessage == null)
+        if (view == ViewSwitcher.ViewIngredients && !isLoadingIngredients && !ingredients.Any() && ingredientsErrorMessage == null)
         {
             await LoadIngredients();
         }
+    }
+
+    private async Task HandleIngredientAdded()
+    {
+        await LoadIngredients();
     }
 
     private void NavigateBack()

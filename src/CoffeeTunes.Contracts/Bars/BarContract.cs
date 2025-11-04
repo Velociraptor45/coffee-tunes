@@ -6,4 +6,5 @@ public class BarContract
     public required string Topic { get; set; }
     public required bool IsOpen { get; set; }
     public required bool HasSupplyLeft { get; set; }
+    public required uint MaxIngredientsPerHipster { get; set; }
 }
