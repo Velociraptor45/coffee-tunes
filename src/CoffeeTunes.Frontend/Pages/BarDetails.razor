@@ -1,0 +1,255 @@
+@page "/franchise/{franchiseId:guid}/bar/{barId:guid}"
+@using Microsoft.AspNetCore.Components.Authorization
+@using CoffeeTunes.Contracts
+@using CoffeeTunes.Contracts.Bars
+@using CoffeeTunes.Contracts.Ingredients
+
+<PageTitle>Coffee Tunes - @(bar?.Topic ?? "Bar")</PageTitle>
+
+<AuthorizeView Policy="User">
+    <Authorized>
+        <div class="bar-details-container">
+            @if (isLoading)
+            {
+                <div class="loading-container">
+                    <div class="coffee-loader">☕</div>
+                    <p>Brewing your bar...</p>
+                </div>
+            }
+            else if (errorMessage != null)
+            {
+                <div class="error-state">
+                    <div class="error-icon">⚠️</div>
+                    <h2>Oops! Something went wrong</h2>
+                    <p>@errorMessage</p>
+                    <button class="retry-button" @onclick="LoadBarData">Try Again</button>
+                </div>
+            }
+            else if (bar != null)
+            {
+                <div class="bar-header">
+                    <button class="back-button" @onclick="NavigateBack">
+                        <span class="back-icon">←</span>
+                        <span>Back to Bars</span>
+                    </button>
+                    <h1 class="bar-title">☕ @bar.Topic</h1>
+                    <div class="bar-status">
+                        @if (bar.IsOpen)
+                        {
+                            <span class="status-badge open-badge">
+                                <span class="status-icon">🔥</span>
+                                <span>OPEN</span>
+                            </span>
+                        }
+                        else if (bar.HasSupplyLeft)
+                        {
+                            <span class="status-badge supply-badge">
+                                <span class="status-icon">📦</span>
+                                <span>IN SUPPLY</span>
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="status-badge empty-badge">
+                                <span class="status-icon">🚫</span>
+                                <span>OUT OF SUPPLY</span>
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <div class="view-switcher">
+                    <button class="view-tab @(activeView == "brewing" ? "active" : "")" @onclick="@(() => SwitchView("brewing"))">
+                        <span class="tab-icon">🔥</span>
+                        <span>Brewing</span>
+                    </button>
+                    <button class="view-tab @(activeView == "ingredients" ? "active" : "")" @onclick="@(() => SwitchView("ingredients"))">
+                        <span class="tab-icon">🧪</span>
+                        <span>Ingredients</span>
+                    </button>
+                    <button class="view-tab @(activeView == "stats" ? "active" : "")" @onclick="@(() => SwitchView("stats"))">
+                        <span class="tab-icon">📊</span>
+                        <span>Stats</span>
+                    </button>
+                </div>
+
+                <div class="view-content">
+                    @if (activeView == "brewing")
+                    {
+                        <div class="empty-view">
+                            <div class="empty-icon">🔥</div>
+                            <h2>Brewing View</h2>
+                            <p>Coming soon - this is where the magic happens!</p>
+                        </div>
+                    }
+                    else if (activeView == "ingredients")
+                    {
+                        @if (isLoadingIngredients)
+                        {
+                            <div class="loading-container">
+                                <div class="coffee-loader">☕</div>
+                                <p>Loading your ingredients...</p>
+                            </div>
+                        }
+                        else if (ingredientsErrorMessage != null)
+                        {
+                            <div class="error-state">
+                                <div class="error-icon">⚠️</div>
+                                <h2>Failed to load ingredients</h2>
+                                <p>@ingredientsErrorMessage</p>
+                                <button class="retry-button" @onclick="LoadIngredients">Try Again</button>
+                            </div>
+                        }
+                        else if (ingredients.Any())
+                        {
+                            <div class="ingredients-grid">
+                                @foreach (var ingredient in ingredients)
+                                {
+                                    <div class="ingredient-card @(ingredient.Used ? "used" : "")">
+                                        <div class="ingredient-icon">🎵</div>
+                                        <h3 class="ingredient-name">@ingredient.Name</h3>
+                                        <div class="ingredient-url">
+                                            <a href="@ingredient.Url" target="_blank" rel="noopener noreferrer">
+                                                @ingredient.Url
+                                            </a>
+                                        </div>
+                                        @if (ingredient.Used)
+                                        {
+                                            <div class="ingredient-badge">✓ USED</div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-view">
+                                <div class="empty-icon">🧪</div>
+                                <h2>No Ingredients Yet</h2>
+                                <p>You haven't submitted any ingredients to this bar yet.</p>
+                            </div>
+                        }
+                    }
+                    else if (activeView == "stats")
+                    {
+                        <div class="empty-view">
+                            <div class="empty-icon">📊</div>
+                            <h2>Stats View</h2>
+                            <p>Coming soon - check out the stats and leaderboards!</p>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public Guid FranchiseId { get; set; }
+
+    [Parameter]
+    public Guid BarId { get; set; }
+
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+
+    [Inject]
+    public NavigationManager Navigation { get; set; } = default!;
+
+    private BarContract? bar;
+    private List<IngredientContract> ingredients = new();
+    private bool isLoading = true;
+    private bool isLoadingIngredients = false;
+    private string? errorMessage;
+    private string? ingredientsErrorMessage;
+    private string activeView = "brewing";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBarData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Reload data when route parameters change
+        await LoadBarData();
+    }
+
+    private async Task LoadBarData()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            bar = await Api.GetBar(FranchiseId, BarId);
+            
+            // Load ingredients if we're on the ingredients view
+            if (activeView == "ingredients")
+            {
+                await LoadIngredients();
+            }
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "Unable to connect to the server. Please check your connection and try again.";
+            bar = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Unable to load bar details. Please try again later.";
+            bar = null;
+            Console.Error.WriteLine($"Error loading bar data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadIngredients()
+    {
+        isLoadingIngredients = true;
+        ingredientsErrorMessage = null;
+
+        try
+        {
+            ingredients = await Api.GetIngredients(FranchiseId, BarId);
+        }
+        catch (HttpRequestException)
+        {
+            ingredientsErrorMessage = "Unable to connect to the server. Please check your connection and try again.";
+            ingredients = new();
+        }
+        catch (Exception ex)
+        {
+            ingredientsErrorMessage = "Unable to load ingredients. Please try again later.";
+            ingredients = new();
+            Console.Error.WriteLine($"Error loading ingredients: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingIngredients = false;
+        }
+    }
+
+    private async Task SwitchView(string view)
+    {
+        activeView = view;
+        
+        // Load ingredients when switching to ingredients view
+        if (view == "ingredients" && !isLoadingIngredients && ingredients.Count == 0 && ingredientsErrorMessage == null)
+        {
+            await LoadIngredients();
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo($"/franchise/{FranchiseId}");
+    }
+}
