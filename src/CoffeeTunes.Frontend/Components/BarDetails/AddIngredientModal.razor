@@ -34,7 +34,7 @@
                 <button class="modal-button secondary" @onclick="Close" disabled="@isSubmitting">
                     Cancel
                 </button>
-                <button class="modal-button primary" @onclick="Submit" disabled="@isSubmitting || string.IsNullOrWhiteSpace(youtubeUrl)">
+                <button class="modal-button primary" @onclick="Submit" disabled="@(isSubmitting || string.IsNullOrWhiteSpace(youtubeUrl))">
                     @if (isSubmitting)
                     {
                         <span class="button-spinner">☕</span>

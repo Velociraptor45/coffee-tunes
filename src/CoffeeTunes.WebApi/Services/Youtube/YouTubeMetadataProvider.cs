@@ -6,7 +6,7 @@ public sealed record YouTubeVideoMetadata(string? Title, string? ThumbnailUrl);
 
 public sealed class YouTubeMetadataProvider(
     IHttpClientFactory httpClientFactory,
-    IOptions<YouTubeOptions> options,
+    YouTubeOptions options,
     ILogger<YouTubeMetadataProvider> logger)
 {
     public async Task<YouTubeVideoMetadata?> GetMetadataAsync(string videoId, CancellationToken cancellationToken)
@@ -14,7 +14,7 @@ public sealed class YouTubeMetadataProvider(
         if (string.IsNullOrWhiteSpace(videoId))
             return null;
 
-        var apiKey = options.Value.ApiKey;
+        var apiKey = options.ApiKey;
         if (string.IsNullOrWhiteSpace(apiKey))
             return null;
 
