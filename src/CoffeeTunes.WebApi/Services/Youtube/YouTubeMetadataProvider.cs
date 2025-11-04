@@ -22,8 +22,7 @@ public sealed class YouTubeMetadataProvider(
         {
             using var httpClient = httpClientFactory.CreateClient("YouTubeApi");
             using var response = await httpClient
-                .GetAsync($"videos?part=snippet&id={videoId}&key={apiKey}", cancellationToken)
-                .ConfigureAwait(false);
+                .GetAsync($"videos?part=snippet&id={videoId}&key={apiKey}", cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -35,8 +34,7 @@ public sealed class YouTubeMetadataProvider(
             }
 
             var payload = await response.Content
-                .ReadFromJsonAsync<YouTubeVideosResponse>(cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
+                .ReadFromJsonAsync<YouTubeVideosResponse>(cancellationToken: cancellationToken);
 
             if (payload?.Items is not { Length: > 0 } items)
                 return null;

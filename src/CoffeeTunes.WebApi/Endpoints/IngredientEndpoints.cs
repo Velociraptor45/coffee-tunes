@@ -54,6 +54,7 @@ public static class IngredientEndpoints
                 OwnerId = i.OwnerId,
                 Name = i.Name,
                 Url = i.Url,
+                ThumbnailUrl = i.ThumbnailUrl,
                 Used = i.Used
             })
             .ToListAsync(cancellationToken);
@@ -98,7 +99,7 @@ public static class IngredientEndpoints
         }
 
         var metadata = await metadataProvider.GetMetadataAsync(videoId, cancellationToken);
-        if (metadata is null)
+        if (metadata is null || string.IsNullOrWhiteSpace(metadata.Title) || string.IsNullOrWhiteSpace(metadata.ThumbnailUrl))
             return TypedResults.BadRequest("Unable to retrieve metadata for the provided YouTube video.");
         
         var ingredientCount = await dbContext.Ingredients
@@ -111,7 +112,8 @@ public static class IngredientEndpoints
         var ingredient = new Ingredient
         {
             Id = Guid.CreateVersion7(),
-            Name = metadata.Title ?? "Dummy",
+            Name = metadata.Title,
+            ThumbnailUrl = metadata.ThumbnailUrl,
             Url = contract.Url,
             Used = false,
             OwnerId = hipsterId,

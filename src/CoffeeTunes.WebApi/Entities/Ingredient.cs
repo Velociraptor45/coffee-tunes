@@ -14,6 +14,7 @@ public class Ingredient
     
     public required string Url { get; set; }
     public required string Name { get; set; }
+    public required string ThumbnailUrl { get; set; }
 
     public required bool Used { get; set; }
 
