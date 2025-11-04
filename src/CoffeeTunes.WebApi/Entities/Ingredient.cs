@@ -9,9 +9,9 @@ public class Ingredient
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public required Guid Id { get; set; }
 
-    public required Guid OwnerId { get; set; }
     public required Guid BarId { get; set; }
     
+    public required string VideoId { get; set; }
     public required string Url { get; set; }
     public required string Name { get; set; }
     public required string ThumbnailUrl { get; set; }
@@ -20,9 +20,9 @@ public class Ingredient
 
     [InverseProperty(nameof(Bean.Ingredient))]
     public ICollection<Bean>? Beans { get; set; }
-    
-    [ForeignKey(nameof(OwnerId))]
-    public Hipster? Owner { get; set; }
+
+    [InverseProperty(nameof(HipstersSubmittedIngredient.Ingredient))]
+    public ICollection<HipstersSubmittedIngredient>? Owners { get; set; }
     
     [ForeignKey(nameof(BarId))]
     public Bar? Bar { get; set; }
