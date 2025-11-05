@@ -44,7 +44,7 @@
             <button 
                 class="cast-beans-button" 
                 @onclick="CastBeans"
-                disabled="@isCasting">
+                disabled="@(isCasting || isSubmitted)">
                 @if (isCasting)
                 {
                     <span class="spinner">☕</span>

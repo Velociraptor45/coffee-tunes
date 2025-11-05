@@ -1,5 +1,6 @@
 @using CoffeeTunes.Contracts
 @using CoffeeTunes.Contracts.Franchise
+@using RestEase
 
 <div class="modal-backdrop @(IsVisible ? "show" : "")" @onclick="OnBackdropClick">
     <div class="modal-content" @onclick:stopPropagation="true">
@@ -92,9 +93,13 @@
             ResetForm();
             await OnClose.InvokeAsync();
         }
+        catch (ApiException apiEx) when (apiEx.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            errorMessage = "Franchise not found. Please check the name and try again.";
+        }
         catch (HttpRequestException)
         {
-            errorMessage = "Unable to join franchise. Please check the franchise name and try again.";
+            errorMessage = "Unable to join franchise. Please check your connection and try again.";
         }
         catch (Exception ex)
         {
