@@ -134,9 +134,17 @@
 .brewing-right {
     flex: 1;
     min-width: 0;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.right-upper {
+    flex: 0 1 auto;
+}
+
+.right-lower {
+    flex: 0 1 auto;
 }
 
 .ingredient-display {

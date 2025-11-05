@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using CoffeeTunes.Contracts
 @using CoffeeTunes.Contracts.Bars
+@using CoffeeTunes.Contracts.Beans
 @using CoffeeTunes.Contracts.BrewCycles
 @using CoffeeTunes.Contracts.Ingredients
 @using CoffeeTunes.Frontend.Components.BarDetails
@@ -43,6 +44,7 @@
                             FranchiseId="@FranchiseId"
                             BarId="@BarId"
                             BrewCycle="@currentBrewCycle"
+                            VotedHipsters="@votedHipsters"
                             OnBrewCycleStarted="@HandleBrewCycleStarted" />
                     }
                     else if (activeView == ViewSwitcher.ViewIngredients)
@@ -94,6 +96,8 @@
     private string? ingredientsErrorMessage;
     private string activeView = ViewSwitcher.ViewBrewing;
     private Guid? previousBarId;
+    private HashSet<Guid> votedHipsterIds = new();
+    private List<ContributingHipsterContract> votedHipsters = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -102,6 +106,7 @@
         // Set up SignalR event handlers
         HubService.OnBarUpdated += HandleBarUpdated;
         HubService.OnBrewCycleUpdated += HandleBrewCycleUpdated;
+        HubService.OnBeanCast += HandleBeanCast;
         
         await LoadBarData();
         
@@ -242,8 +247,29 @@
     private Task HandleBrewCycleUpdated(BrewCycleContract brewCycle)
     {
         currentBrewCycle = brewCycle;
+        // Reset voted hipsters when a new brew cycle starts
+        votedHipsterIds.Clear();
+        UpdateVotedHipstersList();
         StateHasChanged();
         return Task.CompletedTask;
+    }
+    
+    private Task HandleBeanCast(BeanCastContract beanCast)
+    {
+        votedHipsterIds.Add(beanCast.HipsterId);
+        UpdateVotedHipstersList();
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+    
+    private void UpdateVotedHipstersList()
+    {
+        if (bar != null)
+        {
+            votedHipsters = bar.ContributingHipsters
+                .Where(h => votedHipsterIds.Contains(h.Id))
+                .ToList();
+        }
     }
     
     private Task HandleBrewCycleStarted()
@@ -257,6 +283,7 @@
         // Unsubscribe from events
         HubService.OnBarUpdated -= HandleBarUpdated;
         HubService.OnBrewCycleUpdated -= HandleBrewCycleUpdated;
+        HubService.OnBeanCast -= HandleBeanCast;
         
         // Leave the bar
         try

@@ -70,7 +70,16 @@ else
             </div>
             
             <div class="brewing-right">
-                <!-- Empty for now - reserved for future voting UI -->
+                <div class="right-upper">
+                    <VotingPanel 
+                        Bar="@Bar"
+                        FranchiseId="@FranchiseId"
+                        BarId="@BarId"
+                        BrewCycle="@BrewCycle" />
+                </div>
+                <div class="right-lower">
+                    <VotersList VotedHipsters="@VotedHipsters" />
+                </div>
             </div>
         </div>
     </div>
@@ -88,6 +97,9 @@ else
     
     [Parameter]
     public BrewCycleContract? BrewCycle { get; set; }
+    
+    [Parameter]
+    public List<ContributingHipsterContract> VotedHipsters { get; set; } = new();
     
     [Parameter]
     public EventCallback OnBrewCycleStarted { get; set; }
