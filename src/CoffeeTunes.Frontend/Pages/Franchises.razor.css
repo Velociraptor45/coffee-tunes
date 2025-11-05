@@ -25,7 +25,16 @@
     margin-bottom: 1.5rem;
 }
 
-.create-franchise-button {
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.create-franchise-button,
+.join-franchise-button {
     background: linear-gradient(135deg, #6d4c41 0%, #5d4037 100%);
     color: white;
     border: none;
@@ -39,15 +48,20 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    margin-top: 1rem;
 }
 
-.create-franchise-button:hover {
+.join-franchise-button {
+    background: linear-gradient(135deg, #8d6e63 0%, #6d4c41 100%);
+}
+
+.create-franchise-button:hover,
+.join-franchise-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(109, 76, 65, 0.6);
 }
 
-.create-franchise-button .button-icon {
+.create-franchise-button .button-icon,
+.join-franchise-button .button-icon {
     font-size: 1.2rem;
     font-weight: bold;
 }

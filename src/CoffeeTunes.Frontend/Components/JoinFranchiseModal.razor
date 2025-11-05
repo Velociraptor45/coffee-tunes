@@ -1,0 +1,150 @@
+@using CoffeeTunes.Contracts
+@using CoffeeTunes.Contracts.Franchise
+
+<div class="modal-backdrop @(IsVisible ? "show" : "")" @onclick="OnBackdropClick">
+    <div class="modal-content" @onclick:stopPropagation="true">
+        <div class="modal-header">
+            <h2 class="modal-title">☕ Join Existing Franchise</h2>
+            <button class="modal-close" @onclick="Close">✕</button>
+        </div>
+        
+        @if (errorMessage != null)
+        {
+            <div class="modal-error">
+                <div class="error-icon">⚠️</div>
+                <p>@errorMessage</p>
+            </div>
+        }
+
+        <div class="modal-body">
+            <form @onsubmit="HandleSubmit">
+                <div class="form-group">
+                    <label for="franchise-name">Franchise Name</label>
+                    <input 
+                        id="franchise-name"
+                        type="text" 
+                        class="form-input" 
+                        @bind="franchiseName" 
+                        placeholder="Enter the franchise name to join..."
+                        maxlength="100"
+                        disabled="@isSubmitting"
+                        required />
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" @onclick="Close" disabled="@isSubmitting">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-join" disabled="@(isSubmitting || string.IsNullOrWhiteSpace(franchiseName))">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner">☕</span>
+                            <span>Joining...</span>
+                        }
+                        else
+                        {
+                            <span>Join Franchise</span>
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnFranchiseJoined { get; set; }
+
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+
+    private string franchiseName = string.Empty;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(franchiseName))
+        {
+            return;
+        }
+
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            var contract = new JoinFranchiseContract
+            {
+                Name = franchiseName.Trim()
+            };
+
+            await Api.JoinFranchise(contract);
+            
+            await OnFranchiseJoined.InvokeAsync(franchiseName);
+            ResetForm();
+            await OnClose.InvokeAsync();
+        }
+        catch (HttpRequestException ex)
+        {
+            // Try to determine the error based on the exception message
+            if (ex.Message.Contains("404"))
+            {
+                errorMessage = "Franchise not found. Please check the name and try again.";
+            }
+            else if (ex.Message.Contains("409"))
+            {
+                errorMessage = "You are already a member of this franchise.";
+            }
+            else if (ex.Message.Contains("401") || ex.Message.Contains("403"))
+            {
+                errorMessage = "You don't have permission to join this franchise.";
+            }
+            else if (ex.Message.Contains("400"))
+            {
+                errorMessage = "Invalid franchise name. Please check your input and try again.";
+            }
+            else
+            {
+                errorMessage = "Unable to connect to the server. Please check your connection and try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An unexpected error occurred. Please try again.";
+            Console.Error.WriteLine($"Error joining franchise: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Close()
+    {
+        ResetForm();
+        OnClose.InvokeAsync();
+    }
+
+    private void OnBackdropClick()
+    {
+        if (!isSubmitting)
+        {
+            Close();
+        }
+    }
+
+    private void ResetForm()
+    {
+        franchiseName = string.Empty;
+        errorMessage = null;
+        isSubmitting = false;
+    }
+}

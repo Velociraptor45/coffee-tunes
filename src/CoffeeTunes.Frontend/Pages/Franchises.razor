@@ -13,10 +13,16 @@
                 <p class="franchises-subtitle">Choose your favorite spot to share tunes</p>
                 @if (!isLoading)
                 {
-                    <button class="create-franchise-button" @onclick="OpenCreateModal">
-                        <span class="button-icon">➕</span>
-                        <span>Create New Franchise</span>
-                    </button>
+                    <div class="button-group">
+                        <button class="join-franchise-button" @onclick="OpenJoinModal">
+                            <span class="button-icon">🚪</span>
+                            <span>Join Franchise</span>
+                        </button>
+                        <button class="create-franchise-button" @onclick="OpenCreateModal">
+                            <span class="button-icon">➕</span>
+                            <span>Create New Franchise</span>
+                        </button>
+                    </div>
                 }
             </div>
 
@@ -63,6 +69,11 @@
             IsVisible="showCreateModal" 
             OnClose="CloseCreateModal" 
             OnFranchiseCreated="OnFranchiseCreated" />
+        
+        <JoinFranchiseModal 
+            IsVisible="showJoinModal" 
+            OnClose="CloseJoinModal" 
+            OnFranchiseJoined="OnFranchiseJoined" />
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -80,6 +91,7 @@
     private bool isLoading = true;
     private string? errorMessage;
     private bool showCreateModal = false;
+    private bool showJoinModal = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -121,9 +133,25 @@
         showCreateModal = false;
     }
 
+    private void OpenJoinModal()
+    {
+        showJoinModal = true;
+    }
+
+    private void CloseJoinModal()
+    {
+        showJoinModal = false;
+    }
+
     private async Task OnFranchiseCreated(string franchiseName)
     {
         // Reload the franchises list to show the newly created franchise
+        await LoadFranchises();
+    }
+
+    private async Task OnFranchiseJoined(string franchiseName)
+    {
+        // Reload the franchises list to show the newly joined franchise
         await LoadFranchises();
     }
 }
