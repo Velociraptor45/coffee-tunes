@@ -247,9 +247,7 @@
     private Task HandleBrewCycleUpdated(BrewCycleContract brewCycle)
     {
         currentBrewCycle = brewCycle;
-        // Reset voted hipsters when a new brew cycle starts
-        votedHipsterIds.Clear();
-        UpdateVotedHipstersList();
+        ResetVotingState();
         StateHasChanged();
         return Task.CompletedTask;
     }
@@ -260,6 +258,12 @@
         UpdateVotedHipstersList();
         StateHasChanged();
         return Task.CompletedTask;
+    }
+    
+    private void ResetVotingState()
+    {
+        votedHipsterIds.Clear();
+        UpdateVotedHipstersList();
     }
     
     private void UpdateVotedHipstersList()

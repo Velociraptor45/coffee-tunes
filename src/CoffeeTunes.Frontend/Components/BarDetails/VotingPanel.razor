@@ -136,10 +136,11 @@
         
         // Calculate available beans
         // Number of beans = number of owners of the current ingredient
-        var ownerCount = BrewCycle.Ingredient.OwnerHipsterIds.Count();
+        var ownerIds = BrewCycle.Ingredient.OwnerHipsterIds.ToHashSet();
+        var ownerCount = ownerIds.Count;
         
         // If current user is one of the owners, they have one less bean
-        if (BrewCycle.Ingredient.OwnerHipsterIds.Contains(currentUserId.Value))
+        if (ownerIds.Contains(currentUserId.Value))
         {
             availableBeans = ownerCount - 1;
         }
@@ -185,10 +186,13 @@
             await Api.CastBeans(FranchiseId, BarId, contract);
             isSubmitted = true;
         }
+        catch (HttpRequestException)
+        {
+            Console.Error.WriteLine("Unable to cast beans. Please check your connection and try again.");
+        }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error casting beans: {ex.Message}");
-            // Could add error display here
         }
         finally
         {
