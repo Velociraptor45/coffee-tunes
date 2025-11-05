@@ -25,7 +25,14 @@ public class BarHubService : IAsyncDisposable
     public async Task ConnectAsync()
     {
         if (_connection != null)
+        {
+            // Check if connection is in a disconnected state and attempt to restart
+            if (_connection.State == HubConnectionState.Disconnected)
+            {
+                await _connection.StartAsync();
+            }
             return;
+        }
         
         var hubUrl = _connectionConfig.ApiUri.TrimEnd('/') + "/hubs/bar";
         
@@ -65,12 +72,22 @@ public class BarHubService : IAsyncDisposable
         if (_connection == null)
             throw new InvalidOperationException("Hub connection is not initialized");
         
+        // Ensure connection is in Connected state before invoking
+        if (_connection.State != HubConnectionState.Connected)
+        {
+            await _connection.StartAsync();
+        }
+        
         await _connection.InvokeAsync("JoinBar", barId);
     }
     
     public async Task LeaveBarAsync(Guid barId)
     {
         if (_connection == null)
+            return;
+        
+        // Only invoke if connection is in Connected state
+        if (_connection.State != HubConnectionState.Connected)
             return;
         
         await _connection.InvokeAsync("LeaveBar", barId);

@@ -114,10 +114,32 @@ else
     
     private string GetEmbedUrl(string youtubeUrl)
     {
-        // Convert YouTube watch URL to embed URL
-        // https://www.youtube.com/watch?v=VIDEO_ID -> https://www.youtube.com/embed/VIDEO_ID
-        var uri = new Uri(youtubeUrl);
-        var videoId = System.Web.HttpUtility.ParseQueryString(uri.Query).Get("v");
-        return $"https://www.youtube.com/embed/{videoId}";
+        try
+        {
+            // Convert YouTube watch URL to embed URL
+            // https://www.youtube.com/watch?v=VIDEO_ID -> https://www.youtube.com/embed/VIDEO_ID
+            var uri = new Uri(youtubeUrl);
+            
+            // Parse query string manually for Blazor WebAssembly compatibility
+            var query = uri.Query.TrimStart('?');
+            var videoId = query.Split('&')
+                .Select(param => param.Split('='))
+                .Where(parts => parts.Length == 2 && parts[0] == "v")
+                .Select(parts => parts[1])
+                .FirstOrDefault();
+                
+            if (string.IsNullOrEmpty(videoId))
+            {
+                // If no video ID found, return original URL
+                return youtubeUrl;
+            }
+            
+            return $"https://www.youtube.com/embed/{videoId}";
+        }
+        catch
+        {
+            // If URL parsing fails, return original URL
+            return youtubeUrl;
+        }
     }
 }
