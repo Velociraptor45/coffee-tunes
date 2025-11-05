@@ -14,7 +14,8 @@ public static class BrewCycleContractMapper
                 Id = ingredient.Id,
                 Name = ingredient.Name,
                 Url = ingredient.Url,
-                ThumbnailUrl = ingredient.ThumbnailUrl
+                ThumbnailUrl = ingredient.ThumbnailUrl,
+                OwnerHipsterIds = ingredient.Owners!.Select(o => o.HipsterId)
             }
         };
     }

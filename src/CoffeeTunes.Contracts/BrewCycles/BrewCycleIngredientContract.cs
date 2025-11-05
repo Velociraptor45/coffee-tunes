@@ -6,4 +6,5 @@ public class BrewCycleIngredientContract
     public required string Name { get; set; }
     public required string Url { get; set; }
     public required string ThumbnailUrl { get; set; }
+    public required IEnumerable<Guid> OwnerHipsterIds { get; set; }
 }

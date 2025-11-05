@@ -1,7 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
+using CoffeeTunes.Contracts;
+using CoffeeTunes.Contracts.Bars;
 using CoffeeTunes.Contracts.Beans;
+using CoffeeTunes.WebApi.Hubs;
 using CoffeeTunes.WebApi.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace CoffeeTunes.WebApi.Endpoints;
 
@@ -31,12 +35,22 @@ public static class BeansEndpoints
         [FromBody] CastBeansContract contract,
         [FromServices] FranchiseAccessService franchiseAccessService,
         [FromServices] BeansService beansService,
+        [FromServices] IHubContext<BarHub, IBarClient> hubContext,
         CancellationToken cancellationToken)
     {
         await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
-
+        var (hipsterId, _) = franchiseAccessService.GetHipsterInfoFromToken()
+            ?? throw new UnauthorizedAccessException("Hipster information could not be retrieved from token.");
+        
         await beansService.EnsureIngredientIsCurrentlySelected(contract.IngredientId, cancellationToken);
         await beansService.CreateBeansAsync(contract, cancellationToken);
+        
+        await hubContext.Clients
+            .Group(BarHub.GetGroupName(franchiseId, barId))
+            .BeanCast(new BeanCastContract
+            {
+                HipsterId = hipsterId
+            });
 
         return Results.NoContent();
     }

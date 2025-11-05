@@ -18,6 +18,7 @@ public class BrewCycleService(CoffeeTunesDbContext dbContext)
         var selectedIndex = Random.Next(0, count);
         
         var ingredient = await dbContext.Ingredients
+            .Include(i => i.Owners)
             .Where(i => i.BarId == barId && !i.Used)
             .Skip(selectedIndex)
             .FirstAsync(ct);

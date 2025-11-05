@@ -37,6 +37,7 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
 
         var ingredient = await dbContext.Ingredients
             .AsNoTracking()
+            .Include(i => i.Owners)
             .Where(i => i.BarId == barId && !i.Used && i.Selected)
             .FirstOrDefaultAsync();
 
