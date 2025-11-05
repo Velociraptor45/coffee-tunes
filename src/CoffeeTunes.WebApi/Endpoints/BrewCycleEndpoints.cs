@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using CoffeeTunes.Contracts;
+using CoffeeTunes.Contracts.Bars;
 using CoffeeTunes.WebApi.Contexts;
 using CoffeeTunes.WebApi.Hubs;
 using CoffeeTunes.WebApi.Services;
@@ -48,8 +49,19 @@ public static class BrewCycleEndpoints
         bar.IsOpen = true;
         await dbContext.SaveChangesAsync(cancellationToken);
         
-        var brewCycle = await brewCycleService.StartNewCycleAsync(barId, cancellationToken);
+        var barContract = new BarContract
+        {
+            Id = bar.Id,
+            Topic = bar.Topic,
+            IsOpen = bar.IsOpen,
+            HasSupplyLeft = bar.HasSupplyLeft,
+            MaxIngredientsPerHipster = bar.MaxIngredientsPerHipster
+        };
+        await hubContext.Clients
+            .Group(BarHub.GetGroupName(franchiseId, barId))
+            .BarUpdated(barContract);
         
+        var brewCycle = await brewCycleService.StartNewCycleAsync(barId, cancellationToken);
         await hubContext.Clients
             .Group(BarHub.GetGroupName(franchiseId, barId))
             .BrewCycleUpdated(brewCycle);
