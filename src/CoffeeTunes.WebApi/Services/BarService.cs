@@ -9,7 +9,7 @@ public class BarService(CoffeeTunesDbContext dbContext)
 {
     public async Task<BarContract> GetBarContractAsync(Guid barId, Guid franchiseId, CancellationToken ct)
     {
-        return await dbContext.Bars
+        var contract = await dbContext.Bars
             .AsNoTracking()
             .Where(b => b.FranchiseId == franchiseId && b.Id == barId)
             .Select(b => new BarContract
@@ -19,21 +19,26 @@ public class BarService(CoffeeTunesDbContext dbContext)
                 IsOpen = b.IsOpen,
                 HasSupplyLeft = b.HasSupplyLeft,
                 MaxIngredientsPerHipster = b.MaxIngredientsPerHipster,
-                ContributingHipsters = b.Ingredients
-                    .SelectMany(i => i.Owners!)
-                    .DistinctBy(o => o.HipsterId)
-                    .Join(
-                        dbContext.Hipsters,
-                        o => o.HipsterId,
-                        h => h.Id,
-                        (o, h) => new ContributingHipsterContract
-                        {
-                            Id = h.Id,
-                            Name = h.Name
-                        })
-                    .ToList()
+                ContributingHipsters = new List<ContributingHipsterContract>()
             })
             .FirstAsync(ct);
+
+        var contributingHipsters = await dbContext.Ingredients
+            .AsNoTracking()
+            .SelectMany(i => i.Owners!)
+            .Join(
+                dbContext.Hipsters,
+                o => o.HipsterId,
+                h => h.Id,
+                (o, h) => new ContributingHipsterContract
+                {
+                    Id = h.Id,
+                    Name = h.Name
+                })
+            .ToListAsync(ct);
+        
+        contract.ContributingHipsters = contributingHipsters.DistinctBy(h => h.Id).ToList();
+        return contract;
     }
     
     public async Task<Bar> GetBarAsync(Guid barId, Guid franchiseId, CancellationToken ct)
