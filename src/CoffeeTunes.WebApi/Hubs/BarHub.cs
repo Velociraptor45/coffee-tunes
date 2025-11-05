@@ -13,7 +13,7 @@ public class BarHub(DbContext dbContext, FranchiseAccessService accessService) :
     private readonly PresenceTracker _presenceTracker = new();
     public static string GetGroupName(Guid franchiseId, Guid barId) => $"{franchiseId}:{barId}";
     
-    public async Task JoinBarAsync(Guid barId)
+    public async Task JoinBar(Guid barId)
     {
         await accessService.EnsureAccessToBarAsync(barId, CancellationToken.None);
         var (hipsterId, _) = accessService.GetHipsterInfoFromToken()
@@ -31,7 +31,7 @@ public class BarHub(DbContext dbContext, FranchiseAccessService accessService) :
         _presenceTracker.OnConnected(groupName, hipsterId, Context.ConnectionId);
     }
     
-    public async Task LeaveBarAsync(Guid barId)
+    public async Task LeaveBar(Guid barId)
     {
         await accessService.EnsureAccessToBarAsync(barId, CancellationToken.None);
         
