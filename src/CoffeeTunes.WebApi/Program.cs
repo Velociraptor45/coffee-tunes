@@ -73,7 +73,11 @@ app.UseCors(policyBuilder =>
     policyBuilder
         .WithOrigins(corsConfig.AllowedOrigins)
         .WithMethods("GET", "PUT", "POST", "DELETE")
-        .WithHeaders("Content-Type", "authorization");
+        .WithHeaders(
+            "Content-Type",
+            "authorization",
+            "x-signalr-user-agent",
+            "x-requested-with");
 });
 
 app.UseRouting();

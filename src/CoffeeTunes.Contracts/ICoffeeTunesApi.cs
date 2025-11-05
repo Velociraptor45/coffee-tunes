@@ -21,12 +21,6 @@ public interface ICoffeeTunesApi
     [Get("v1/{franchiseId}/bars/all")]
     Task<List<BarOverviewContract>> GetAllBars([Path] Guid franchiseId);
 
-    [Put("v1/{franchiseId}/bars/{id}/open")]
-    Task OpenBar([Path] Guid franchiseId, [Path] Guid id);
-
-    [Put("v1/{franchiseId}/bars/{id}/close")]
-    Task CloseBar([Path] Guid franchiseId, [Path] Guid id);
-
     // Ingredient endpoints
     [Get("v1/{franchiseId}/bars/{barId}/ingredients")]
     Task<List<IngredientContract>> GetIngredients([Path] Guid franchiseId, [Path] Guid barId);

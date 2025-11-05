@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using CoffeeTunes.Frontend;
 using CoffeeTunes.Frontend.Auth;
 using CoffeeTunes.Frontend.Configs;
+using CoffeeTunes.Frontend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Newtonsoft.Json;
@@ -16,6 +17,8 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 AddSecurity(builder);
 ConfigureHttpClient(builder);
+
+builder.Services.AddScoped<BarHubService>();
 
 var app = builder.Build();
 

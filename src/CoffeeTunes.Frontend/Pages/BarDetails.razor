@@ -2,8 +2,11 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using CoffeeTunes.Contracts
 @using CoffeeTunes.Contracts.Bars
+@using CoffeeTunes.Contracts.BrewCycles
 @using CoffeeTunes.Contracts.Ingredients
 @using CoffeeTunes.Frontend.Components.BarDetails
+@using CoffeeTunes.Frontend.Services
+@implements IAsyncDisposable
 
 <PageTitle>Coffee Tunes - @(bar?.Topic ?? "Bar")</PageTitle>
 
@@ -35,7 +38,12 @@
                 <div class="view-content">
                     @if (activeView == ViewSwitcher.ViewBrewing)
                     {
-                        <BrewingView />
+                        <BrewingView 
+                            Bar="@bar" 
+                            FranchiseId="@FranchiseId"
+                            BarId="@BarId"
+                            BrewCycle="@currentBrewCycle"
+                            OnBrewCycleStarted="@HandleBrewCycleStarted" />
                     }
                     else if (activeView == ViewSwitcher.ViewIngredients)
                     {
@@ -74,8 +82,12 @@
     [Inject]
     public NavigationManager Navigation { get; set; } = default!;
 
+    [Inject]
+    public BarHubService HubService { get; set; } = default!;
+
     private BarContract? bar;
     private List<IngredientContract> ingredients = new();
+    private BrewCycleContract? currentBrewCycle;
     private bool isLoading = true;
     private bool isLoadingIngredients = false;
     private string? errorMessage;
@@ -86,7 +98,23 @@
     protected override async Task OnInitializedAsync()
     {
         previousBarId = BarId;
+        
+        // Set up SignalR event handlers
+        HubService.OnBarUpdated += HandleBarUpdated;
+        HubService.OnBrewCycleUpdated += HandleBrewCycleUpdated;
+        
         await LoadBarData();
+        
+        // Connect to SignalR hub and join the bar
+        try
+        {
+            await HubService.ConnectAsync();
+            await HubService.JoinBarAsync(BarId);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error connecting to SignalR hub: {ex.Message}");
+        }
     }
 
     protected override async Task OnParametersSetAsync()
@@ -94,8 +122,31 @@
         // Reload data only when BarId changes
         if (previousBarId != BarId)
         {
+            // Leave the previous bar
+            if (previousBarId.HasValue)
+            {
+                try
+                {
+                    await HubService.LeaveBarAsync(previousBarId.Value);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Error leaving bar: {ex.Message}");
+                }
+            }
+            
             previousBarId = BarId;
             await LoadBarData();
+            
+            // Join the new bar
+            try
+            {
+                await HubService.JoinBarAsync(BarId);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error joining bar: {ex.Message}");
+            }
         }
     }
 
@@ -176,5 +227,45 @@
     private void NavigateBack()
     {
         Navigation.NavigateTo($"/franchise/{FranchiseId}");
+    }
+    
+    private Task HandleBarUpdated(BarContract updatedBar)
+    {
+        if (updatedBar.Id == BarId)
+        {
+            bar = updatedBar;
+            StateHasChanged();
+        }
+        return Task.CompletedTask;
+    }
+    
+    private Task HandleBrewCycleUpdated(BrewCycleContract brewCycle)
+    {
+        currentBrewCycle = brewCycle;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+    
+    private Task HandleBrewCycleStarted()
+    {
+        // This will be handled by SignalR updates
+        return Task.CompletedTask;
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        // Unsubscribe from events
+        HubService.OnBarUpdated -= HandleBarUpdated;
+        HubService.OnBrewCycleUpdated -= HandleBrewCycleUpdated;
+        
+        // Leave the bar
+        try
+        {
+            await HubService.LeaveBarAsync(BarId);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error leaving bar on dispose: {ex.Message}");
+        }
     }
 }
