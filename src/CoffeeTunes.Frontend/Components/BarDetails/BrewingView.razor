@@ -1,5 +1,123 @@
-<div class="empty-view">
-    <div class="empty-icon">🔥</div>
-    <h2>Brewing View</h2>
-    <p>Coming soon - this is where the magic happens!</p>
-</div>
+@using CoffeeTunes.Contracts
+@using CoffeeTunes.Contracts.Bars
+@using CoffeeTunes.Contracts.BrewCycles
+
+@if (BrewCycle == null)
+{
+    <div class="brewing-empty-state">
+        <div class="brewing-icon">☕</div>
+        @if (!Bar.IsOpen && Bar.HasSupplyLeft)
+        {
+            <h2>Ready to Brew!</h2>
+            <p>Click the button below to start a brewing cycle and see who submitted this ingredient.</p>
+            <button class="start-brew-button" @onclick="StartBrewCycle" disabled="@isStarting">
+                @if (isStarting)
+                {
+                    <span class="button-spinner">⏳</span>
+                    <span>Starting...</span>
+                }
+                else
+                {
+                    <span class="button-icon">🔥</span>
+                    <span>Start Brewing</span>
+                }
+            </button>
+        }
+        else if (Bar.IsOpen)
+        {
+            <h2>Brewing in Progress</h2>
+            <p>The bar is currently open. Waiting for the next ingredient...</p>
+        }
+        else if (!Bar.HasSupplyLeft)
+        {
+            <h2>Out of Supply</h2>
+            <p>There are no more ingredients to brew. Add more ingredients to continue!</p>
+        }
+    </div>
+}
+else
+{
+    <div class="brewing-active">
+        <div class="brewing-header">
+            <h2>🔥 Now Brewing</h2>
+            <span class="brewing-badge">ACTIVE</span>
+        </div>
+        
+        <div class="ingredient-display">
+            <div class="ingredient-thumbnail-large">
+                <img src="@BrewCycle.Ingredient.ThumbnailUrl" alt="@BrewCycle.Ingredient.Name" />
+            </div>
+            <h3 class="ingredient-title">@BrewCycle.Ingredient.Name</h3>
+            <div class="ingredient-video">
+                <iframe 
+                    width="100%" 
+                    height="400" 
+                    src="@GetEmbedUrl(BrewCycle.Ingredient.Url)" 
+                    title="@BrewCycle.Ingredient.Name"
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
+            </div>
+            <div class="ingredient-link">
+                <a href="@BrewCycle.Ingredient.Url" target="_blank" rel="noopener noreferrer" class="watch-link">
+                    <span>🎥</span>
+                    <span>Watch on YouTube</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="brewing-info">
+            <p>Who submitted this ingredient? Cast your beans to vote!</p>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public required BarContract Bar { get; set; }
+    
+    [Parameter]
+    public required Guid FranchiseId { get; set; }
+    
+    [Parameter]
+    public required Guid BarId { get; set; }
+    
+    [Parameter]
+    public BrewCycleContract? BrewCycle { get; set; }
+    
+    [Parameter]
+    public EventCallback OnBrewCycleStarted { get; set; }
+    
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+    
+    private bool isStarting = false;
+    
+    private async Task StartBrewCycle()
+    {
+        isStarting = true;
+        try
+        {
+            await Api.StartBrewCycle(FranchiseId, BarId);
+            await OnBrewCycleStarted.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error starting brew cycle: {ex.Message}");
+        }
+        finally
+        {
+            isStarting = false;
+        }
+    }
+    
+    private string GetEmbedUrl(string youtubeUrl)
+    {
+        // Convert YouTube watch URL to embed URL
+        // https://www.youtube.com/watch?v=VIDEO_ID -> https://www.youtube.com/embed/VIDEO_ID
+        var uri = new Uri(youtubeUrl);
+        var videoId = System.Web.HttpUtility.ParseQueryString(uri.Query).Get("v");
+        return $"https://www.youtube.com/embed/{videoId}";
+    }
+}
