@@ -74,7 +74,9 @@ else
                         BrewCycle="@BrewCycle" />
                 </div>
                 <div class="right-lower">
-                    <VotersList VotedHipsters="@VotedHipsters" />
+                    <VotersList 
+                        JoinedHipsters="@JoinedHipsters"
+                        VotedHipsters="@VotedHipsters" />
                 </div>
             </div>
         </div>
@@ -93,6 +95,9 @@ else
     
     [Parameter]
     public BrewCycleContract? BrewCycle { get; set; }
+    
+    [Parameter]
+    public List<ContributingHipsterContract> JoinedHipsters { get; set; } = new();
     
     [Parameter]
     public List<ContributingHipsterContract> VotedHipsters { get; set; } = new();

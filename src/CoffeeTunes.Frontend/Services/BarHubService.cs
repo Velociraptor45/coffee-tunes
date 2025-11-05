@@ -2,6 +2,7 @@ using CoffeeTunes.Contracts;
 using CoffeeTunes.Contracts.Bars;
 using CoffeeTunes.Contracts.Beans;
 using CoffeeTunes.Contracts.BrewCycles;
+using CoffeeTunes.Contracts.Hipsters;
 using CoffeeTunes.Frontend.Configs;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -17,6 +18,7 @@ public class BarHubService : IAsyncDisposable
     public event Func<BarContract, Task>? OnBarUpdated;
     public event Func<BrewCycleContract, Task>? OnBrewCycleUpdated;
     public event Func<BeanCastContract, Task>? OnBeanCast;
+    public event Func<HipsterJoinedContract, Task>? OnHipsterJoined;
     
     public BarHubService(IAccessTokenProvider tokenProvider, ConnectionConfig connectionConfig)
     {
@@ -70,6 +72,12 @@ public class BarHubService : IAsyncDisposable
         {
             if (OnBeanCast != null)
                 await OnBeanCast.Invoke(beanCastContract);
+        });
+        
+        _connection.On<HipsterJoinedContract>(nameof(IBarClient.HipsterJoined), async (hipsterJoinedContract) =>
+        {
+            if (OnHipsterJoined != null)
+                await OnHipsterJoined.Invoke(hipsterJoinedContract);
         });
         
         await _connection.StartAsync();

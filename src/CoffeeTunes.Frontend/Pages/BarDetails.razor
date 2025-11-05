@@ -4,6 +4,7 @@
 @using CoffeeTunes.Contracts.Bars
 @using CoffeeTunes.Contracts.Beans
 @using CoffeeTunes.Contracts.BrewCycles
+@using CoffeeTunes.Contracts.Hipsters
 @using CoffeeTunes.Contracts.Ingredients
 @using CoffeeTunes.Frontend.Components.BarDetails
 @using CoffeeTunes.Frontend.Services
@@ -44,6 +45,7 @@
                             FranchiseId="@FranchiseId"
                             BarId="@BarId"
                             BrewCycle="@currentBrewCycle"
+                            JoinedHipsters="@joinedHipsters"
                             VotedHipsters="@votedHipsters"
                             OnBrewCycleStarted="@HandleBrewCycleStarted" />
                     }
@@ -98,6 +100,8 @@
     private Guid? previousBarId;
     private HashSet<Guid> votedHipsterIds = new();
     private List<ContributingHipsterContract> votedHipsters = new();
+    private HashSet<Guid> joinedHipsterIds = new();
+    private List<ContributingHipsterContract> joinedHipsters = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -107,6 +111,7 @@
         HubService.OnBarUpdated += HandleBarUpdated;
         HubService.OnBrewCycleUpdated += HandleBrewCycleUpdated;
         HubService.OnBeanCast += HandleBeanCast;
+        HubService.OnHipsterJoined += HandleHipsterJoined;
         
         await LoadBarData();
         
@@ -260,6 +265,14 @@
         return Task.CompletedTask;
     }
     
+    private Task HandleHipsterJoined(HipsterJoinedContract hipsterJoined)
+    {
+        joinedHipsterIds.Add(hipsterJoined.HipsterId);
+        UpdateJoinedHipstersList();
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+    
     private void ResetVotingState()
     {
         votedHipsterIds.Clear();
@@ -276,6 +289,16 @@
         }
     }
     
+    private void UpdateJoinedHipstersList()
+    {
+        if (bar != null)
+        {
+            joinedHipsters = bar.ContributingHipsters
+                .Where(h => joinedHipsterIds.Contains(h.Id))
+                .ToList();
+        }
+    }
+    
     private Task HandleBrewCycleStarted()
     {
         // This will be handled by SignalR updates
@@ -288,6 +311,7 @@
         HubService.OnBarUpdated -= HandleBarUpdated;
         HubService.OnBrewCycleUpdated -= HandleBrewCycleUpdated;
         HubService.OnBeanCast -= HandleBeanCast;
+        HubService.OnHipsterJoined -= HandleHipsterJoined;
         
         // Leave the bar
         try
