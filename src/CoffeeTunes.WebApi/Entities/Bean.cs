@@ -11,6 +11,7 @@ public class Bean
 
     public required Guid CastFromId { get; set; }
     public required Guid CastToId { get; set; }
+    public required bool IsCorrect { get; set; }
     
     public required Guid IngredientId { get; set; }
 

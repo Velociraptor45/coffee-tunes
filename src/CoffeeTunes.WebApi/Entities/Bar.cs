@@ -21,4 +21,7 @@ public class Bar
     
     [ForeignKey(nameof(FranchiseId))]
     public Franchise? Franchise { get; set; }
+    
+    [InverseProperty(nameof(Ingredient.Bar))]
+    public ICollection<Ingredient> Ingredients { get; set; } = [];
 }

@@ -107,24 +107,13 @@ public static class BarEndpoints
         [FromRoute] Guid id,
         [FromServices] CoffeeTunesDbContext dbContext,
         [FromServices] FranchiseAccessService franchiseAccessService,
+        [FromServices] BarService barService,
         CancellationToken cancellationToken)
     {
         await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
         
-        var bar = await dbContext.Bars
-            .AsNoTracking()
-            .Where(b => b.FranchiseId == franchiseId && b.Id == id)
-            .Select(b => new BarContract
-            {
-                Id = b.Id,
-                Topic = b.Topic,
-                IsOpen = b.IsOpen,
-                HasSupplyLeft = b.HasSupplyLeft,
-                MaxIngredientsPerHipster = b.MaxIngredientsPerHipster
-            })
-            .FirstOrDefaultAsync(cancellationToken);
-
-
-        return Results.Ok(bar);
+        var barContract = await barService.GetBarContractAsync(id, franchiseId, cancellationToken);
+        
+        return Results.Ok(barContract);
     }
 }

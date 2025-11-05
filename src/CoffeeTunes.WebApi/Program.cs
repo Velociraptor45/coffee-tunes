@@ -27,6 +27,7 @@ builder.Services.AddScoped<FranchiseAccessService>();
 builder.Services.AddScoped<BarService>();
 builder.Services.AddScoped<YouTubeMetadataProvider>();
 builder.Services.AddScoped<BrewCycleService>();
+builder.Services.AddScoped<BeansService>();
 builder.Services.AddHttpClient("YouTubeApi", client =>
 {
     client.BaseAddress = new Uri("https://www.googleapis.com/youtube/v3/");
@@ -90,6 +91,7 @@ app.RegisterFranchiseEndpoints();
 app.RegisterBarEndpoints();
 app.RegisterIngredientEndpoints();
 app.RegisterBrewCycleEndpoints();
+app.RegisterBeansEndpoints();
 
 app.MapHub<BarHub>("/hubs/bar");
 

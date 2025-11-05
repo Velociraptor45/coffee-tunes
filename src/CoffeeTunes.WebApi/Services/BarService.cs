@@ -1,3 +1,4 @@
+using CoffeeTunes.Contracts.Bars;
 using CoffeeTunes.WebApi.Contexts;
 using CoffeeTunes.WebApi.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,35 @@ namespace CoffeeTunes.WebApi.Services;
 
 public class BarService(CoffeeTunesDbContext dbContext)
 {
+    public async Task<BarContract> GetBarContractAsync(Guid barId, Guid franchiseId, CancellationToken ct)
+    {
+        return await dbContext.Bars
+            .AsNoTracking()
+            .Where(b => b.FranchiseId == franchiseId && b.Id == barId)
+            .Select(b => new BarContract
+            {
+                Id = b.Id,
+                Topic = b.Topic,
+                IsOpen = b.IsOpen,
+                HasSupplyLeft = b.HasSupplyLeft,
+                MaxIngredientsPerHipster = b.MaxIngredientsPerHipster,
+                ContributingHipsters = b.Ingredients
+                    .SelectMany(i => i.Owners!)
+                    .DistinctBy(o => o.HipsterId)
+                    .Join(
+                        dbContext.Hipsters,
+                        o => o.HipsterId,
+                        h => h.Id,
+                        (o, h) => new ContributingHipsterContract
+                        {
+                            Id = h.Id,
+                            Name = h.Name
+                        })
+                    .ToList()
+            })
+            .FirstAsync(ct);
+    }
+    
     public async Task<Bar> GetBarAsync(Guid barId, Guid franchiseId, CancellationToken ct)
     {
         return await dbContext.Bars
