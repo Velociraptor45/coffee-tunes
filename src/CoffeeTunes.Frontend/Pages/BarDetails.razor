@@ -146,6 +146,11 @@
             }
             
             previousBarId = BarId;
+            
+            // Reset state for new bar
+            joinedHipsterIds.Clear();
+            joinedHipsters.Clear();
+            
             await LoadBarData();
             
             // Join the new bar
@@ -267,9 +272,11 @@
     
     private Task HandleHipsterJoined(HipsterJoinedContract hipsterJoined)
     {
-        joinedHipsterIds.Add(hipsterJoined.HipsterId);
-        UpdateJoinedHipstersList();
-        StateHasChanged();
+        if (joinedHipsterIds.Add(hipsterJoined.HipsterId))
+        {
+            UpdateJoinedHipstersList();
+            StateHasChanged();
+        }
         return Task.CompletedTask;
     }
     
