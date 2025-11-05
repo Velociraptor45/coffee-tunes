@@ -21,7 +21,7 @@ public static class BrewCycleEndpoints
 
     private static IEndpointRouteBuilder RegisterStartBrewCycle(this IEndpointRouteBuilder builder)
     {
-        builder.MapPost($"/{_routeBase}/open", StartBrewCycle)
+        builder.MapPut($"/{_routeBase}/open", StartBrewCycle)
             .WithName(nameof(StartBrewCycle))
             .RequireAuthorization("User");
 

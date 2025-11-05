@@ -7,6 +7,10 @@ namespace CoffeeTunes.Contracts;
 
 public interface ICoffeeTunesApi
 {
+    // Brewing Cycle endpoints
+    [Put("v1/{franchiseId}/bars/{barId}/open")]
+    Task StartBrewCycle([Path] Guid franchiseId, [Path] Guid barId);
+    
     // Bar endpoints
     [Post("v1/{franchiseId}/bars")]
     Task<HttpResponseMessage> CreateBar([Path] Guid franchiseId, [Body] CreateBarContract contract);
