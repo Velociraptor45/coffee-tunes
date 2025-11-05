@@ -118,7 +118,7 @@
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error connecting to SignalR hub: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error connecting to SignalR hub: {ex.Message}");
         }
     }
 
@@ -136,7 +136,7 @@
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"Error leaving bar: {ex.Message}");
+                    await Console.Error.WriteLineAsync($"Error leaving bar: {ex.Message}");
                 }
             }
             
@@ -150,7 +150,7 @@
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error joining bar: {ex.Message}");
+                await Console.Error.WriteLineAsync($"Error joining bar: {ex.Message}");
             }
         }
     }
@@ -179,7 +179,7 @@
         {
             errorMessage = "Unable to load bar details. Please try again later.";
             bar = null;
-            Console.Error.WriteLine($"Error loading bar data: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error loading bar data: {ex.Message}");
         }
         finally
         {
@@ -205,7 +205,7 @@
         {
             ingredientsErrorMessage = "Unable to load ingredients. Please try again later.";
             ingredients = new();
-            Console.Error.WriteLine($"Error loading ingredients: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error loading ingredients: {ex.Message}");
         }
         finally
         {
@@ -296,7 +296,7 @@
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error leaving bar on dispose: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error leaving bar on dispose: {ex.Message}");
         }
     }
 }

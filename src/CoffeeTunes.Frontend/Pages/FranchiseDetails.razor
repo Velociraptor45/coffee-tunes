@@ -189,7 +189,7 @@
             errorMessage = "Unable to load franchise details. Please try again later.";
             franchise = null;
             allBars = new();
-            Console.Error.WriteLine($"Error loading franchise data: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error loading franchise data: {ex.Message}");
         }
         finally
         {

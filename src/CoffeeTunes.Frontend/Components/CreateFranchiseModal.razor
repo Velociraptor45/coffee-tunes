@@ -113,7 +113,7 @@
         catch (Exception ex)
         {
             errorMessage = "An unexpected error occurred. Please try again.";
-            Console.Error.WriteLine($"Error creating franchise: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error creating franchise: {ex.Message}");
         }
         finally
         {

@@ -149,7 +149,7 @@
         catch (Exception ex)
         {
             errorMessage = "An unexpected error occurred. Please try again.";
-            Console.Error.WriteLine($"Error creating bar: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error creating bar: {ex.Message}");
         }
         finally
         {

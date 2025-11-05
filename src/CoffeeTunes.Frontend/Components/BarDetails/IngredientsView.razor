@@ -140,7 +140,7 @@ else
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error removing ingredient: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error removing ingredient: {ex.Message}");
             // Could add error handling UI here if needed
         }
     }

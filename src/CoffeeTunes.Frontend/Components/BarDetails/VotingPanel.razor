@@ -23,49 +23,40 @@
             </p>
         </div>
 
-        @if (availableBeans > 0)
-        {
-            <div class="hipsters-list">
-                @foreach (var hipster in selectableHipsters)
-                {
-                    <button 
-                        class="hipster-button @(selectedHipsters.Contains(hipster.Id) ? "selected" : "")"
-                        @onclick="() => ToggleHipster(hipster.Id)"
-                        disabled="@(!CanSelectMore() && !selectedHipsters.Contains(hipster.Id))">
-                        <span class="hipster-icon">👤</span>
-                        <span class="hipster-name">@hipster.Name</span>
-                        @if (selectedHipsters.Contains(hipster.Id))
-                        {
-                            <span class="selected-icon">✓</span>
-                        }
-                    </button>
-                }
-            </div>
-
-            <div class="voting-actions">
+        <div class="hipsters-list">
+            @foreach (var hipster in selectableHipsters)
+            {
                 <button 
-                    class="cast-beans-button" 
-                    @onclick="CastBeans"
-                    disabled="@isCasting">
-                    @if (isCasting)
+                    class="hipster-button @(selectedHipsters.Contains(hipster.Id) ? "selected" : "")"
+                    @onclick="() => ToggleHipster(hipster.Id)"
+                    disabled="@(!CanSelectMore() && !selectedHipsters.Contains(hipster.Id))">
+                    <span class="hipster-icon">👤</span>
+                    <span class="hipster-name">@hipster.Name</span>
+                    @if (selectedHipsters.Contains(hipster.Id))
                     {
-                        <span class="spinner">☕</span>
-                        <span>Casting...</span>
-                    }
-                    else
-                    {
-                        <span>🫘</span>
-                        <span>Cast Beans (@selectedHipsters.Count/@availableBeans)</span>
+                        <span class="selected-icon">✓</span>
                     }
                 </button>
-            </div>
-        }
-        else
-        {
-            <div class="no-beans-message">
-                <p>You submitted this ingredient, so you don't have any beans to cast!</p>
-            </div>
-        }
+            }
+        </div>
+
+        <div class="voting-actions">
+            <button 
+                class="cast-beans-button" 
+                @onclick="CastBeans"
+                disabled="@isCasting">
+                @if (isCasting)
+                {
+                    <span class="spinner">☕</span>
+                    <span>Casting...</span>
+                }
+                else
+                {
+                    <span>🫘</span>
+                    <span>Cast Beans (@selectedHipsters.Count/@availableBeans)</span>
+                }
+            </button>
+        </div>
     }
 </div>
 
@@ -188,11 +179,11 @@
         }
         catch (HttpRequestException)
         {
-            Console.Error.WriteLine("Unable to cast beans. Please check your connection and try again.");
+            await Console.Error.WriteLineAsync("Unable to cast beans. Please check your connection and try again.");
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error casting beans: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error casting beans: {ex.Message}");
         }
         finally
         {

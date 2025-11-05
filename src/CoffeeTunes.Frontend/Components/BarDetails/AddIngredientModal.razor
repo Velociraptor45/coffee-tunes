@@ -116,7 +116,7 @@
         {
             showError = true;
             errorMessage = "Unable to add ingredient. Please try again later.";
-            Console.Error.WriteLine($"Error adding ingredient: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error adding ingredient: {ex.Message}");
         }
         finally
         {
