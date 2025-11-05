@@ -128,9 +128,6 @@
     {
         if (!currentUserId.HasValue)
             return;
-            
-        // Get all hipsters who submitted at least one ingredient
-        var contributingHipsterIds = Bar.ContributingHipsters.Select(h => h.Id).ToHashSet();
         
         // Filter out the current user from selectable hipsters
         selectableHipsters = Bar.ContributingHipsters

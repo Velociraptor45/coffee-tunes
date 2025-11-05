@@ -92,29 +92,9 @@
             ResetForm();
             await OnClose.InvokeAsync();
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
-            // Try to determine the error based on the exception message
-            if (ex.Message.Contains("404"))
-            {
-                errorMessage = "Franchise not found. Please check the name and try again.";
-            }
-            else if (ex.Message.Contains("409"))
-            {
-                errorMessage = "You are already a member of this franchise.";
-            }
-            else if (ex.Message.Contains("401") || ex.Message.Contains("403"))
-            {
-                errorMessage = "You don't have permission to join this franchise.";
-            }
-            else if (ex.Message.Contains("400"))
-            {
-                errorMessage = "Invalid franchise name. Please check your input and try again.";
-            }
-            else
-            {
-                errorMessage = "Unable to connect to the server. Please check your connection and try again.";
-            }
+            errorMessage = "Unable to join franchise. Please check the franchise name and try again.";
         }
         catch (Exception ex)
         {
