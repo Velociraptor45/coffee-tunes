@@ -201,17 +201,3 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
 }
-
-.brewing-info {
-    text-align: center;
-    padding: 1rem;
-    background: rgba(212, 165, 116, 0.1);
-    border-radius: 8px;
-    border: 2px solid rgba(212, 165, 116, 0.3);
-}
-
-.brewing-info p {
-    color: #d4a574;
-    font-size: 1.1rem;
-    margin: 0;
-}
