@@ -1,4 +1,5 @@
 using CoffeeTunes.Contracts.Bars;
+using CoffeeTunes.Contracts.Beans;
 using CoffeeTunes.Contracts.Franchise;
 using CoffeeTunes.Contracts.Ingredients;
 using RestEase;
@@ -10,6 +11,10 @@ public interface ICoffeeTunesApi
     // Brewing Cycle endpoints
     [Put("v1/{franchiseId}/bars/{barId}/open")]
     Task StartBrewCycle([Path] Guid franchiseId, [Path] Guid barId);
+    
+    // Beans endpoints
+    [Post("v1/{franchiseId}/bars/{barId}/beans")]
+    Task CastBeans([Path] Guid franchiseId, [Path] Guid barId, [Body] CastBeansContract contract);
     
     // Bar endpoints
     [Post("v1/{franchiseId}/bars")]

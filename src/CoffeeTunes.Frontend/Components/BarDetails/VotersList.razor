@@ -1,0 +1,29 @@
+@using CoffeeTunes.Contracts.Bars
+
+<div class="voters-list">
+    <h3 class="voters-title">🗳️ Voters</h3>
+    
+    @if (VotedHipsters.Any())
+    {
+        <div class="voted-hipsters">
+            @foreach (var hipster in VotedHipsters)
+            {
+                <div class="voter-item">
+                    <span class="voter-icon">✓</span>
+                    <span class="voter-name">@hipster.Name</span>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="no-voters">
+            <p>No one has voted yet...</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<ContributingHipsterContract> VotedHipsters { get; set; } = new();
+}

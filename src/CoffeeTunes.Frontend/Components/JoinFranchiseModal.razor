@@ -1,10 +1,11 @@
 @using CoffeeTunes.Contracts
 @using CoffeeTunes.Contracts.Franchise
+@using RestEase
 
 <div class="modal-backdrop @(IsVisible ? "show" : "")" @onclick="OnBackdropClick">
     <div class="modal-content" @onclick:stopPropagation="true">
         <div class="modal-header">
-            <h2 class="modal-title">☕ Create New Franchise</h2>
+            <h2 class="modal-title">☕ Join Existing Franchise</h2>
             <button class="modal-close" @onclick="Close">✕</button>
         </div>
         
@@ -25,7 +26,7 @@
                         type="text" 
                         class="form-input" 
                         @bind="franchiseName" 
-                        placeholder="Enter your coffee franchise name..."
+                        placeholder="Enter the franchise name to join..."
                         maxlength="100"
                         disabled="@isSubmitting"
                         required />
@@ -35,15 +36,15 @@
                     <button type="button" class="btn-cancel" @onclick="Close" disabled="@isSubmitting">
                         Cancel
                     </button>
-                    <button type="submit" class="btn-create" disabled="@(isSubmitting || string.IsNullOrWhiteSpace(franchiseName))">
+                    <button type="submit" class="btn-join" disabled="@(isSubmitting || string.IsNullOrWhiteSpace(franchiseName))">
                         @if (isSubmitting)
                         {
                             <span class="spinner">☕</span>
-                            <span>Creating...</span>
+                            <span>Joining...</span>
                         }
                         else
                         {
-                            <span>Create Franchise</span>
+                            <span>Join Franchise</span>
                         }
                     </button>
                 </div>
@@ -60,7 +61,7 @@
     public EventCallback OnClose { get; set; }
 
     [Parameter]
-    public EventCallback<string> OnFranchiseCreated { get; set; }
+    public EventCallback<string> OnFranchiseJoined { get; set; }
 
     [Inject]
     public ICoffeeTunesApi Api { get; set; } = default!;
@@ -81,39 +82,29 @@
 
         try
         {
-            var contract = new CreateFranchiseContract
+            var contract = new JoinFranchiseContract
             {
                 Name = franchiseName.Trim()
             };
 
-            var response = await Api.CreateFranchise(contract);
+            await Api.JoinFranchise(contract);
             
-            if (response.IsSuccessStatusCode)
-            {
-                await OnFranchiseCreated.InvokeAsync(franchiseName);
-                ResetForm();
-                await OnClose.InvokeAsync();
-            }
-            else
-            {
-                var statusCode = (int)response.StatusCode;
-                errorMessage = statusCode switch
-                {
-                    400 => "Invalid franchise name. Please check your input and try again.",
-                    401 or 403 => "You don't have permission to create a franchise.",
-                    409 => "A franchise with this name already exists.",
-                    _ => $"Failed to create franchise (Error {statusCode}). Please try again."
-                };
-            }
+            await OnFranchiseJoined.InvokeAsync(franchiseName);
+            ResetForm();
+            await OnClose.InvokeAsync();
+        }
+        catch (ApiException apiEx) when (apiEx.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            errorMessage = "Franchise not found. Please check the name and try again.";
         }
         catch (HttpRequestException)
         {
-            errorMessage = "Unable to connect to the server. Please check your connection and try again.";
+            errorMessage = "Unable to join franchise. Please check your connection and try again.";
         }
         catch (Exception ex)
         {
             errorMessage = "An unexpected error occurred. Please try again.";
-            await Console.Error.WriteLineAsync($"Error creating franchise: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error joining franchise: {ex.Message}");
         }
         finally
         {

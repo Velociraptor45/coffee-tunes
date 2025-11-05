@@ -1,0 +1,166 @@
+.voting-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+.voting-title {
+    color: #d4a574;
+    font-size: 1.5rem;
+    margin: 0;
+    text-align: center;
+}
+
+.voting-submitted {
+    text-align: center;
+    padding: 2rem;
+    background: rgba(76, 175, 80, 0.2);
+    border: 2px solid rgba(76, 175, 80, 0.4);
+    border-radius: 8px;
+}
+
+.success-icon {
+    font-size: 3rem;
+    color: #4caf50;
+    margin-bottom: 1rem;
+}
+
+.voting-submitted p {
+    color: #81c784;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.voting-info {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(212, 165, 116, 0.1);
+    border-radius: 6px;
+    border: 2px solid rgba(212, 165, 116, 0.3);
+}
+
+.beans-count {
+    color: #d4a574;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.beans-count strong {
+    color: #e0b68a;
+    font-size: 1.3rem;
+}
+
+.hipsters-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.hipster-button {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(212, 165, 116, 0.3);
+    border-radius: 8px;
+    color: #d4a574;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.hipster-button:hover:not(:disabled) {
+    background: rgba(212, 165, 116, 0.2);
+    border-color: rgba(212, 165, 116, 0.5);
+    transform: translateX(5px);
+}
+
+.hipster-button.selected {
+    background: rgba(212, 165, 116, 0.3);
+    border-color: #d4a574;
+}
+
+.hipster-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.hipster-icon {
+    font-size: 1.5rem;
+}
+
+.hipster-name {
+    flex: 1;
+    text-align: left;
+}
+
+.selected-icon {
+    font-size: 1.2rem;
+    color: #4caf50;
+}
+
+.voting-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.cast-beans-button {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #d4a574 0%, #b8935d 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
+}
+
+.cast-beans-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #e0b68a 0%, #c4a06f 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(212, 165, 116, 0.4);
+}
+
+.cast-beans-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.no-beans-message {
+    text-align: center;
+    padding: 1.5rem;
+    background: rgba(255, 152, 0, 0.1);
+    border: 2px solid rgba(255, 152, 0, 0.3);
+    border-radius: 8px;
+}
+
+.no-beans-message p {
+    color: #ffb74d;
+    font-size: 1rem;
+    margin: 0;
+}

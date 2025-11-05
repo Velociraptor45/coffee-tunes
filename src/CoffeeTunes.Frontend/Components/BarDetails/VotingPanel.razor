@@ -1,0 +1,193 @@
+@using CoffeeTunes.Contracts
+@using CoffeeTunes.Contracts.Bars
+@using CoffeeTunes.Contracts.BrewCycles
+@using CoffeeTunes.Contracts.Beans
+@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="voting-panel">
+    <h3 class="voting-title">☕ Cast Your Beans</h3>
+    
+    @if (isSubmitted)
+    {
+        <div class="voting-submitted">
+            <div class="success-icon">✓</div>
+            <p>Your beans have been cast!</p>
+        </div>
+    }
+    else
+    {
+        <div class="voting-info">
+            <p class="beans-count">
+                You have <strong>@availableBeans</strong> 
+                @(availableBeans == 1 ? "bean" : "beans") to cast
+            </p>
+        </div>
+
+        <div class="hipsters-list">
+            @foreach (var hipster in selectableHipsters)
+            {
+                <button 
+                    class="hipster-button @(selectedHipsters.Contains(hipster.Id) ? "selected" : "")"
+                    @onclick="() => ToggleHipster(hipster.Id)"
+                    disabled="@(!CanSelectMore() && !selectedHipsters.Contains(hipster.Id))">
+                    <span class="hipster-icon">👤</span>
+                    <span class="hipster-name">@hipster.Name</span>
+                    @if (selectedHipsters.Contains(hipster.Id))
+                    {
+                        <span class="selected-icon">✓</span>
+                    }
+                </button>
+            }
+        </div>
+
+        <div class="voting-actions">
+            <button 
+                class="cast-beans-button" 
+                @onclick="CastBeans"
+                disabled="@(isCasting || isSubmitted)">
+                @if (isCasting)
+                {
+                    <span class="spinner">☕</span>
+                    <span>Casting...</span>
+                }
+                else
+                {
+                    <span>🫘</span>
+                    <span>Cast Beans (@selectedHipsters.Count/@availableBeans)</span>
+                }
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public required BarContract Bar { get; set; }
+    
+    [Parameter]
+    public required Guid FranchiseId { get; set; }
+    
+    [Parameter]
+    public required Guid BarId { get; set; }
+    
+    [Parameter]
+    public required BrewCycleContract BrewCycle { get; set; }
+    
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+    
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+    
+    private List<ContributingHipsterContract> selectableHipsters = new();
+    private HashSet<Guid> selectedHipsters = new();
+    private int availableBeans = 0;
+    private bool isCasting = false;
+    private bool isSubmitted = false;
+    private Guid? currentUserId;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserInfo();
+        CalculateVotingData();
+    }
+    
+    protected override void OnParametersSet()
+    {
+        CalculateVotingData();
+    }
+    
+    private async Task LoadUserInfo()
+    {
+        if (AuthenticationStateTask != null)
+        {
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+            
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var subClaim = user.FindFirst("sub");
+                if (subClaim != null && Guid.TryParse(subClaim.Value, out var userId))
+                {
+                    currentUserId = userId;
+                }
+            }
+        }
+    }
+    
+    private void CalculateVotingData()
+    {
+        if (!currentUserId.HasValue)
+            return;
+        
+        // Filter out the current user from selectable hipsters
+        selectableHipsters = Bar.ContributingHipsters
+            .Where(h => h.Id != currentUserId.Value)
+            .ToList();
+        
+        // Calculate available beans
+        // Number of beans = number of owners of the current ingredient
+        var ownerIds = BrewCycle.Ingredient.OwnerHipsterIds.ToHashSet();
+        var ownerCount = ownerIds.Count;
+        
+        // If current user is one of the owners, they have one less bean
+        if (ownerIds.Contains(currentUserId.Value))
+        {
+            availableBeans = ownerCount - 1;
+        }
+        else
+        {
+            availableBeans = ownerCount;
+        }
+        
+        // Reset selection state
+        selectedHipsters.Clear();
+        isSubmitted = false;
+    }
+    
+    private void ToggleHipster(Guid hipsterId)
+    {
+        if (selectedHipsters.Contains(hipsterId))
+        {
+            selectedHipsters.Remove(hipsterId);
+        }
+        else if (CanSelectMore())
+        {
+            selectedHipsters.Add(hipsterId);
+        }
+    }
+    
+    private bool CanSelectMore()
+    {
+        return selectedHipsters.Count < availableBeans;
+    }
+    
+    private async Task CastBeans()
+    {
+        isCasting = true;
+        
+        try
+        {
+            var contract = new CastBeansContract
+            {
+                IngredientId = BrewCycle.Ingredient.Id,
+                Beans = selectedHipsters.Select(id => new CastBeanContract { HipsterId = id }).ToList()
+            };
+            
+            await Api.CastBeans(FranchiseId, BarId, contract);
+            isSubmitted = true;
+        }
+        catch (HttpRequestException)
+        {
+            await Console.Error.WriteLineAsync("Unable to cast beans. Please check your connection and try again.");
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error casting beans: {ex.Message}");
+        }
+        finally
+        {
+            isCasting = false;
+        }
+    }
+}

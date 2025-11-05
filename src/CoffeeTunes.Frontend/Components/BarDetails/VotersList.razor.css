@@ -1,0 +1,54 @@
+.voters-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+.voters-title {
+    color: #d4a574;
+    font-size: 1.3rem;
+    margin: 0;
+    text-align: center;
+}
+
+.voted-hipsters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.voter-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    color: #a88966;
+    border: 1px solid rgba(212, 165, 116, 0.2);
+}
+
+.voter-icon {
+    color: #4caf50;
+    font-size: 1.2rem;
+}
+
+.voter-name {
+    flex: 1;
+    font-size: 1rem;
+}
+
+.no-voters {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.no-voters p {
+    color: #a88966;
+    font-size: 1rem;
+    font-style: italic;
+    margin: 0;
+}

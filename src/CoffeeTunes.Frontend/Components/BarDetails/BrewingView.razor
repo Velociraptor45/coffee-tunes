@@ -63,14 +63,19 @@ else
                         </a>
                     </div>
                 </div>
-                
-                <div class="brewing-info">
-                    <p>Who submitted this ingredient? Cast your beans to vote!</p>
-                </div>
             </div>
             
             <div class="brewing-right">
-                <!-- Empty for now - reserved for future voting UI -->
+                <div class="right-upper">
+                    <VotingPanel 
+                        Bar="@Bar"
+                        FranchiseId="@FranchiseId"
+                        BarId="@BarId"
+                        BrewCycle="@BrewCycle" />
+                </div>
+                <div class="right-lower">
+                    <VotersList VotedHipsters="@VotedHipsters" />
+                </div>
             </div>
         </div>
     </div>
@@ -90,6 +95,9 @@ else
     public BrewCycleContract? BrewCycle { get; set; }
     
     [Parameter]
+    public List<ContributingHipsterContract> VotedHipsters { get; set; } = new();
+    
+    [Parameter]
     public EventCallback OnBrewCycleStarted { get; set; }
     
     [Inject]
@@ -107,7 +115,7 @@ else
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error starting brew cycle: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error starting brew cycle: {ex.Message}");
         }
         finally
         {

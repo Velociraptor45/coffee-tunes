@@ -1,5 +1,6 @@
 using CoffeeTunes.Contracts;
 using CoffeeTunes.Contracts.Bars;
+using CoffeeTunes.Contracts.Beans;
 using CoffeeTunes.Contracts.BrewCycles;
 using CoffeeTunes.Frontend.Configs;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
@@ -15,6 +16,7 @@ public class BarHubService : IAsyncDisposable
     
     public event Func<BarContract, Task>? OnBarUpdated;
     public event Func<BrewCycleContract, Task>? OnBrewCycleUpdated;
+    public event Func<BeanCastContract, Task>? OnBeanCast;
     
     public BarHubService(IAccessTokenProvider tokenProvider, ConnectionConfig connectionConfig)
     {
@@ -62,6 +64,12 @@ public class BarHubService : IAsyncDisposable
         {
             if (OnBrewCycleUpdated != null)
                 await OnBrewCycleUpdated.Invoke(brewCycleContract);
+        });
+        
+        _connection.On<BeanCastContract>(nameof(IBarClient.BeanCast), async (beanCastContract) =>
+        {
+            if (OnBeanCast != null)
+                await OnBeanCast.Invoke(beanCastContract);
         });
         
         await _connection.StartAsync();

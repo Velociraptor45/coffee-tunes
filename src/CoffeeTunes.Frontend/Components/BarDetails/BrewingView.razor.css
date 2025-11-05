@@ -134,9 +134,17 @@
 .brewing-right {
     flex: 1;
     min-width: 0;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.right-upper {
+    flex: 0 1 auto;
+}
+
+.right-lower {
+    flex: 0 1 auto;
 }
 
 .ingredient-display {
@@ -192,18 +200,4 @@
     background: linear-gradient(135deg, #e0b68a 0%, #c4a06f 100%);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
-}
-
-.brewing-info {
-    text-align: center;
-    padding: 1rem;
-    background: rgba(212, 165, 116, 0.1);
-    border-radius: 8px;
-    border: 2px solid rgba(212, 165, 116, 0.3);
-}
-
-.brewing-info p {
-    color: #d4a574;
-    font-size: 1.1rem;
-    margin: 0;
 }
