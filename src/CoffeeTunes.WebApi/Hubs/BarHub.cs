@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using CoffeeTunes.Contracts;
+using CoffeeTunes.Contracts.Hipsters;
 using CoffeeTunes.WebApi.Contexts;
 using CoffeeTunes.WebApi.Mappers;
 using CoffeeTunes.WebApi.Services;
@@ -32,6 +33,22 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
         _presenceTracker.OnConnected(groupName, hipsterId, Context.ConnectionId);
 
+        // notify about existing online hipsters
+        var onlineHipsters = _presenceTracker.Trackers.GetValueOrDefault(groupName, new HashSet<Guid>());
+        var hipsters = await dbContext.Hipsters
+            .AsNoTracking()
+            .Where(h => onlineHipsters.Contains(h.Id))
+            .ToListAsync();
+        
+        foreach (var hipster in hipsters)
+        {
+            await Clients.Caller.HipsterJoined(new HipsterJoinedContract
+            {
+                HipsterId = hipster.Id,
+                Name = hipster.Name,
+            });
+        }
+        
         if (!bar.IsOpen)
             return;
 
@@ -46,7 +63,7 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
         
         var brewCycleContract = ingredient.ToBrewCycleContract();
         await Clients.Caller.BrewCycleUpdated(brewCycleContract);
-    }
+    } 
     
     public async Task LeaveBar(Guid barId)
     {
@@ -65,14 +82,14 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
 
 public class PresenceTracker
 {
-    // groupName => set of hipsterIds
-    private readonly ConcurrentDictionary<string, HashSet<Guid>> _trackers = new();
     // connectionId => groupName, hipsterId
     private readonly ConcurrentDictionary<string, (string groupName, Guid hipsterId)> _connections = new();
+    // groupName => set of hipsterIds
+    public ConcurrentDictionary<string, HashSet<Guid>> Trackers { get; } = new();
     
     public void OnConnected(string groupName, Guid hipsterId, string connectionId)
     {
-        var hipsters = _trackers.GetOrAdd(groupName, _ => new HashSet<Guid>());
+        var hipsters = Trackers.GetOrAdd(groupName, _ => new HashSet<Guid>());
         lock (hipsters)
         {
             hipsters.Add(hipsterId);
@@ -88,14 +105,14 @@ public class PresenceTracker
         
         var (groupName, hipsterId) = info;
         
-        if (!_trackers.TryGetValue(groupName, out var hipsters))
+        if (!Trackers.TryGetValue(groupName, out var hipsters))
             return;
         
         lock (hipsters)
         {
             hipsters.Remove(hipsterId);
             if (hipsters.Count == 0) 
-                _trackers.TryRemove(groupName, out _);
+                Trackers.TryRemove(groupName, out _);
         }
     }
 }
