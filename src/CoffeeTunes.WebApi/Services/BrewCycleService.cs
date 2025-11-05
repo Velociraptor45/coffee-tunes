@@ -1,5 +1,6 @@
 using CoffeeTunes.Contracts.BrewCycles;
 using CoffeeTunes.WebApi.Contexts;
+using CoffeeTunes.WebApi.Mappers;
 using Microsoft.EntityFrameworkCore;
 
 namespace CoffeeTunes.WebApi.Services;
@@ -16,20 +17,13 @@ public class BrewCycleService(CoffeeTunesDbContext dbContext)
         
         var selectedIndex = Random.Next(0, count);
         
-        var ingredient = await dbContext.Ingredients.AsNoTracking()
+        var ingredient = await dbContext.Ingredients
             .Where(i => i.BarId == barId && !i.Used)
             .Skip(selectedIndex)
             .FirstAsync(ct);
 
-        return new BrewCycleContract
-        {
-            Ingredient = new BrewCycleIngredientContract
-            {
-                Id = ingredient.Id,
-                Name = ingredient.Name,
-                Url = ingredient.Url,
-                ThumbnailUrl = ingredient.ThumbnailUrl
-            }
-        };
+        ingredient.Selected = true;
+
+        return ingredient.ToBrewCycleContract();
     }
 }

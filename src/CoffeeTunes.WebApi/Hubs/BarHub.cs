@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 using CoffeeTunes.Contracts;
+using CoffeeTunes.WebApi.Contexts;
+using CoffeeTunes.WebApi.Mappers;
 using CoffeeTunes.WebApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -8,18 +10,18 @@ using Microsoft.EntityFrameworkCore;
 namespace CoffeeTunes.WebApi.Hubs;
 
 [Authorize("User")]
-public class BarHub(DbContext dbContext, FranchiseAccessService accessService) : Hub<IBarClient>
+public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService accessService) : Hub<IBarClient>
 {
     private readonly PresenceTracker _presenceTracker = new();
     public static string GetGroupName(Guid franchiseId, Guid barId) => $"{franchiseId}:{barId}";
     
     public async Task JoinBar(Guid barId)
     {
-        await accessService.EnsureAccessToBarAsync(barId, CancellationToken.None);
-        var (hipsterId, _) = accessService.GetHipsterInfoFromToken()
-            ?? throw new HubException("Invalid user token");
+        var hipsterId = Guid.Parse(Context.User!.Claims.First(c => c.Type == "sub").Value);
         
-        var bar = await dbContext.Set<Entities.Bar>()
+        await accessService.EnsureAccessToBarAsync(hipsterId, barId, CancellationToken.None);
+        
+        var bar = await dbContext.Bars
             .AsNoTracking()
             .FirstOrDefaultAsync(b => b.Id == barId);
         
@@ -29,11 +31,26 @@ public class BarHub(DbContext dbContext, FranchiseAccessService accessService) :
         var groupName = GetGroupName(bar.FranchiseId, bar.Id);
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
         _presenceTracker.OnConnected(groupName, hipsterId, Context.ConnectionId);
+
+        if (!bar.IsOpen)
+            return;
+
+        var ingredient = await dbContext.Ingredients
+            .AsNoTracking()
+            .Where(i => i.BarId == barId && !i.Used && i.Selected)
+            .FirstOrDefaultAsync();
+
+        if (ingredient is null)
+            return;
+        
+        var brewCycleContract = ingredient.ToBrewCycleContract();
+        await Clients.Caller.BrewCycleUpdated(brewCycleContract);
     }
     
     public async Task LeaveBar(Guid barId)
     {
-        await accessService.EnsureAccessToBarAsync(barId, CancellationToken.None);
+        var hipsterId = Guid.Parse(Context.User!.Claims.First(c => c.Type == "sub").Value);
+        await accessService.EnsureAccessToBarAsync(hipsterId, barId, CancellationToken.None);
         
         _presenceTracker.OnDisconnected(Context.ConnectionId);
     }

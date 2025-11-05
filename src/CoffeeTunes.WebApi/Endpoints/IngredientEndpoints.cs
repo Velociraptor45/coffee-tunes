@@ -54,7 +54,8 @@ public static class IngredientEndpoints
                 Name = i.Name,
                 Url = i.Url,
                 ThumbnailUrl = i.ThumbnailUrl,
-                Used = i.Used
+                Used = i.Used,
+                Selected = i.Selected
             })
             .ToListAsync(cancellationToken);
 
@@ -124,6 +125,7 @@ public static class IngredientEndpoints
                 Url = contract.Url,
                 VideoId = videoId,
                 Used = false,
+                Selected = false,
                 BarId = bar.Id,
                 Owners = []
             };

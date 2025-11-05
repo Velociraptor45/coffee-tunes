@@ -47,7 +47,6 @@ public static class BrewCycleEndpoints
             return Results.NoContent();
         
         bar.IsOpen = true;
-        await dbContext.SaveChangesAsync(cancellationToken);
         
         var barContract = new BarContract
         {
@@ -57,11 +56,13 @@ public static class BrewCycleEndpoints
             HasSupplyLeft = bar.HasSupplyLeft,
             MaxIngredientsPerHipster = bar.MaxIngredientsPerHipster
         };
+        
+        var brewCycle = await brewCycleService.StartNewCycleAsync(barId, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        
         await hubContext.Clients
             .Group(BarHub.GetGroupName(franchiseId, barId))
             .BarUpdated(barContract);
-        
-        var brewCycle = await brewCycleService.StartNewCycleAsync(barId, cancellationToken);
         await hubContext.Clients
             .Group(BarHub.GetGroupName(franchiseId, barId))
             .BrewCycleUpdated(brewCycle);

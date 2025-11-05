@@ -18,9 +18,7 @@ public static class BarEndpoints
         endpoints
             .RegisterCreateBar()
             .RegisterGetBar()
-            .RegisterGetAllBars()
-            .RegisterOpenBar()
-            .RegisterCloseBar();
+            .RegisterGetAllBars();
     }
 
     private static IEndpointRouteBuilder RegisterCreateBar(this IEndpointRouteBuilder builder)
@@ -128,67 +126,5 @@ public static class BarEndpoints
 
 
         return Results.Ok(bar);
-    }
-
-    private static IEndpointRouteBuilder RegisterOpenBar(this IEndpointRouteBuilder builder)
-    {
-        builder.MapPut($"/{_routeBase}/{{id:guid}}/open", OpenBar)
-            .WithName(nameof(OpenBar))
-            .RequireAuthorization("User");
-
-        return builder;
-    }
-    
-    private static async Task<IResult> OpenBar(
-        [FromRoute] Guid franchiseId,
-        [FromRoute] Guid id,
-        [FromServices] CoffeeTunesDbContext dbContext,
-        [FromServices] FranchiseAccessService franchiseAccessService,
-        CancellationToken cancellationToken)
-    {
-        await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
-        
-        var bar = await dbContext.Bars
-            .Where(b => b.FranchiseId == franchiseId && b.Id == id)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (bar is null)
-            return Results.NotFound("Bar not found in the specified franchise.");
-        if(!bar.HasSupplyLeft)
-            return Results.BadRequest("The bar has no supply left - you can't open the bar.");
-        
-        bar.IsOpen = true;
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Results.NoContent();
-    }
-
-    private static IEndpointRouteBuilder RegisterCloseBar(this IEndpointRouteBuilder builder)
-    {
-        builder.MapPut($"/{_routeBase}/{{id:guid}}/close", CloseBar)
-            .WithName(nameof(CloseBar))
-            .RequireAuthorization("User");
-
-        return builder;
-    }
-    
-    private static async Task<IResult> CloseBar(
-        [FromRoute] Guid franchiseId,
-        [FromRoute] Guid id,
-        [FromServices] CoffeeTunesDbContext dbContext,
-        [FromServices] FranchiseAccessService franchiseAccessService,
-        CancellationToken cancellationToken)
-    {
-        await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
-        
-        var bar = await dbContext.Bars
-            .Where(b => b.FranchiseId == franchiseId && b.Id == id)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (bar is null)
-            return Results.NotFound("Bar not found in the specified franchise.");
-        
-        bar.IsOpen = false;
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Results.NoContent();
     }
 }
