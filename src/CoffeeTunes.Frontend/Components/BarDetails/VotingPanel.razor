@@ -140,9 +140,9 @@
             availableBeans = ownerCount;
         }
         
-        // Reset selection state
+        // Reset selection state only if not already submitted
         selectedHipsters.Clear();
-        isSubmitted = false;
+        // Don't reset isSubmitted - once beans are cast, keep the success message visible
     }
     
     private void ToggleHipster(Guid hipsterId)

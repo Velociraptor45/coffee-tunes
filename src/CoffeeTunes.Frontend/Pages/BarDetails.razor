@@ -46,7 +46,7 @@
                             BarId="@BarId"
                             BrewCycle="@currentBrewCycle"
                             JoinedHipsters="@joinedHipsters"
-                            VotedHipsters="@votedHipsters"
+                            VotedHipsterIds="@votedHipsterIds"
                             OnBrewCycleStarted="@HandleBrewCycleStarted" />
                     }
                     else if (activeView == ViewSwitcher.ViewIngredients)
@@ -100,8 +100,7 @@
     private Guid? previousBarId;
     private HashSet<Guid> votedHipsterIds = new();
     private List<ContributingHipsterContract> votedHipsters = new();
-    private HashSet<Guid> joinedHipsterIds = new();
-    private List<ContributingHipsterContract> joinedHipsters = new();
+    private Dictionary<Guid, string> joinedHipsters = new(); // ID -> Name mapping
 
     protected override async Task OnInitializedAsync()
     {
@@ -148,7 +147,6 @@
             previousBarId = BarId;
             
             // Reset state for new bar
-            joinedHipsterIds.Clear();
             joinedHipsters.Clear();
             
             await LoadBarData();
@@ -272,9 +270,9 @@
     
     private Task HandleHipsterJoined(HipsterJoinedContract hipsterJoined)
     {
-        if (joinedHipsterIds.Add(hipsterJoined.HipsterId))
+        if (!joinedHipsters.ContainsKey(hipsterJoined.HipsterId))
         {
-            UpdateJoinedHipstersList();
+            joinedHipsters[hipsterJoined.HipsterId] = hipsterJoined.Name;
             StateHasChanged();
         }
         return Task.CompletedTask;
@@ -292,16 +290,6 @@
         {
             votedHipsters = bar.ContributingHipsters
                 .Where(h => votedHipsterIds.Contains(h.Id))
-                .ToList();
-        }
-    }
-    
-    private void UpdateJoinedHipstersList()
-    {
-        if (bar != null)
-        {
-            joinedHipsters = bar.ContributingHipsters
-                .Where(h => joinedHipsterIds.Contains(h.Id))
                 .ToList();
         }
     }

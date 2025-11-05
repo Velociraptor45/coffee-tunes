@@ -6,13 +6,13 @@
     @if (JoinedHipsters.Any())
     {
         <div class="vote-count">
-            @VotedHipsters.Count/@JoinedHipsters.Count
+            @VotedHipsterIds.Count/@JoinedHipsters.Count
         </div>
         
         <div class="hipsters-list">
-            @foreach (var hipster in JoinedHipsters)
+            @foreach (var hipster in JoinedHipsters.OrderBy(h => h.Value))
             {
-                var hasVoted = VotedHipsters.Any(v => v.Id == hipster.Id);
+                var hasVoted = VotedHipsterIds.Contains(hipster.Key);
                 <div class="hipster-item @(hasVoted ? "voted" : "")">
                     @if (hasVoted)
                     {
@@ -22,7 +22,7 @@
                     {
                         <span class="vote-pending">○</span>
                     }
-                    <span class="hipster-name">@hipster.Name</span>
+                    <span class="hipster-name">@hipster.Value</span>
                 </div>
             }
         </div>
@@ -37,8 +37,8 @@
 
 @code {
     [Parameter]
-    public List<ContributingHipsterContract> JoinedHipsters { get; set; } = new();
+    public Dictionary<Guid, string> JoinedHipsters { get; set; } = new();
     
     [Parameter]
-    public List<ContributingHipsterContract> VotedHipsters { get; set; } = new();
+    public HashSet<Guid> VotedHipsterIds { get; set; } = new();
 }

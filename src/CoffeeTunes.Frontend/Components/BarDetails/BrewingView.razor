@@ -76,7 +76,7 @@ else
                 <div class="right-lower">
                     <VotersList 
                         JoinedHipsters="@JoinedHipsters"
-                        VotedHipsters="@VotedHipsters" />
+                        VotedHipsterIds="@VotedHipsterIds" />
                 </div>
             </div>
         </div>
@@ -97,10 +97,10 @@ else
     public BrewCycleContract? BrewCycle { get; set; }
     
     [Parameter]
-    public List<ContributingHipsterContract> JoinedHipsters { get; set; } = new();
+    public Dictionary<Guid, string> JoinedHipsters { get; set; } = new();
     
     [Parameter]
-    public List<ContributingHipsterContract> VotedHipsters { get; set; } = new();
+    public HashSet<Guid> VotedHipsterIds { get; set; } = new();
     
     [Parameter]
     public EventCallback OnBrewCycleStarted { get; set; }
