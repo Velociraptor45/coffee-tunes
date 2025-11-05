@@ -43,32 +43,35 @@ else
             <span class="brewing-badge">ACTIVE</span>
         </div>
         
-        <div class="ingredient-display">
-            <div class="ingredient-thumbnail-large">
-                <img src="@BrewCycle.Ingredient.ThumbnailUrl" alt="@BrewCycle.Ingredient.Name" />
+        <div class="brewing-content">
+            <div class="brewing-left">
+                <div class="ingredient-display">
+                    <h3 class="ingredient-title">@BrewCycle.Ingredient.Name</h3>
+                    <div class="ingredient-video">
+                        <iframe 
+                            src="@GetEmbedUrl(BrewCycle.Ingredient.Url)" 
+                            title="@BrewCycle.Ingredient.Name"
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="ingredient-link">
+                        <a href="@BrewCycle.Ingredient.Url" target="_blank" rel="noopener noreferrer" class="watch-link">
+                            <span>🎥</span>
+                            <span>Watch on YouTube</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="brewing-info">
+                    <p>Who submitted this ingredient? Cast your beans to vote!</p>
+                </div>
             </div>
-            <h3 class="ingredient-title">@BrewCycle.Ingredient.Name</h3>
-            <div class="ingredient-video">
-                <iframe 
-                    width="100%" 
-                    height="400" 
-                    src="@GetEmbedUrl(BrewCycle.Ingredient.Url)" 
-                    title="@BrewCycle.Ingredient.Name"
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>
+            
+            <div class="brewing-right">
+                <!-- Empty for now - reserved for future voting UI -->
             </div>
-            <div class="ingredient-link">
-                <a href="@BrewCycle.Ingredient.Url" target="_blank" rel="noopener noreferrer" class="watch-link">
-                    <span>🎥</span>
-                    <span>Watch on YouTube</span>
-                </a>
-            </div>
-        </div>
-        
-        <div class="brewing-info">
-            <p>Who submitted this ingredient? Cast your beans to vote!</p>
         </div>
     </div>
 }
