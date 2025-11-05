@@ -27,6 +27,31 @@ public class FranchiseAccessService(IHttpContextAccessor httpContextAccessor, Jw
             throw new InvalidOperationException("Franchise not found");
     }
     
+    public async Task EnsureAccessToBarAsync(Guid barId, CancellationToken cancellationToken)
+    {
+        var httpContext = httpContextAccessor.HttpContext 
+                          ?? throw new InvalidOperationException("No HttpContext available");
+        var auth = httpContext.Request.Headers.Authorization.First()!;
+        var token = handler.ReadJwtToken(auth[7..]);
+
+        if (!Guid.TryParse(token.Subject, out Guid subject))
+            throw new InvalidOperationException("Invalid token");
+        
+        var franchiseId = await dbContext.Bars.AsNoTracking()
+            .Where(cb => cb.Id == barId)
+            .Select(cb => cb.FranchiseId)
+            .FirstOrDefaultAsync(cancellationToken);
+        
+        if(franchiseId == Guid.Empty)
+            throw new InvalidOperationException("Bar not found");
+        
+        var result = await dbContext.HipstersInFranchises.AsNoTracking()
+            .AnyAsync(hic => hic.FranchiseId == franchiseId && hic.HipsterId == subject, cancellationToken);
+
+        if (!result)
+            throw new InvalidOperationException("Franchise not found");
+    }
+    
     public (Guid Id, string Name)? GetHipsterInfoFromToken()
     {
         var httpContext = httpContextAccessor.HttpContext 

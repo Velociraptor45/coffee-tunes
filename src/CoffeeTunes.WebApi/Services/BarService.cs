@@ -9,7 +9,6 @@ public class BarService(CoffeeTunesDbContext dbContext)
     public async Task<Bar> GetBarAsync(Guid barId, Guid franchiseId, CancellationToken ct)
     {
         return await dbContext.Bars
-            .AsNoTracking()
             .FirstOrDefaultAsync(b => b.Id == barId && b.FranchiseId == franchiseId, cancellationToken: ct)
                ?? throw new InvalidOperationException($"Bar not found in the specified franchise");
     }

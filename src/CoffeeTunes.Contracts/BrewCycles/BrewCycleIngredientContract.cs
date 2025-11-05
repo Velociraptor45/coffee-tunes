@@ -1,0 +1,9 @@
+namespace CoffeeTunes.Contracts.BrewCycles;
+
+public class BrewCycleIngredientContract
+{
+    public required Guid Id { get; set; }
+    public required string Name { get; set; }
+    public required string Url { get; set; }
+    public required string ThumbnailUrl { get; set; }
+}

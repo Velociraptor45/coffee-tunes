@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Options;
-
 namespace CoffeeTunes.WebApi.Services.Youtube;
 
 public sealed record YouTubeVideoMetadata(string? Title, string? ThumbnailUrl);

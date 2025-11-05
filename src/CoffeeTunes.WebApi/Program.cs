@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using CoffeeTunes.WebApi.Auth;
 using CoffeeTunes.WebApi.Contexts;
 using CoffeeTunes.WebApi.Endpoints;
+using CoffeeTunes.WebApi.Hubs;
 using CoffeeTunes.WebApi.Services;
 using CoffeeTunes.WebApi.Services.Youtube;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -25,6 +26,7 @@ builder.Services.AddHostedService<DatabaseMigrationBackgroundService>();
 builder.Services.AddScoped<FranchiseAccessService>();
 builder.Services.AddScoped<BarService>();
 builder.Services.AddScoped<YouTubeMetadataProvider>();
+builder.Services.AddScoped<BrewCycleService>();
 builder.Services.AddHttpClient("YouTubeApi", client =>
 {
     client.BaseAddress = new Uri("https://www.googleapis.com/youtube/v3/");
@@ -34,6 +36,10 @@ var ytOptions = new YouTubeOptions();
 builder.Configuration.Bind(ytOptions);
 builder.Services.AddSingleton(ytOptions);
 
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = builder.Environment.IsEnvironment("Local");
+});
 
 SetupSecurity();
 
@@ -53,7 +59,6 @@ builder.Services.AddDbContext<CoffeeTunesDbContext>(opt =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
 {
     app.MapOpenApi();
@@ -80,9 +85,12 @@ app.UseAuthorization();
 app.RegisterFranchiseEndpoints();
 app.RegisterBarEndpoints();
 app.RegisterIngredientEndpoints();
+app.RegisterBrewCycleEndpoints();
+
+app.MapHub<BarHub>("/hubs/bar");
 
 await app.RunAsync();
-
+return;
 
 void SetupSecurity()
 {
