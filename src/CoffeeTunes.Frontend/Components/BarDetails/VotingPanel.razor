@@ -73,6 +73,9 @@
     [Parameter]
     public required BrewCycleContract BrewCycle { get; set; }
     
+    [Parameter]
+    public bool HasCurrentUserVoted { get; set; }
+    
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
     
@@ -95,6 +98,12 @@
     protected override void OnParametersSet()
     {
         CalculateVotingData();
+        
+        // Set isSubmitted based on external parameter (from BeanCast SignalR events)
+        if (HasCurrentUserVoted && !isSubmitted)
+        {
+            isSubmitted = true;
+        }
     }
     
     private async Task LoadUserInfo()

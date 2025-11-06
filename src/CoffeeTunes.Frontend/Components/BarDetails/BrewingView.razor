@@ -71,7 +71,8 @@ else
                         Bar="@Bar"
                         FranchiseId="@FranchiseId"
                         BarId="@BarId"
-                        BrewCycle="@BrewCycle" />
+                        BrewCycle="@BrewCycle"
+                        HasCurrentUserVoted="@(CurrentUserId.HasValue && VotedHipsterIds.Contains(CurrentUserId.Value))" />
                 </div>
                 <div class="right-lower">
                     <VotersList 
@@ -101,6 +102,9 @@ else
     
     [Parameter]
     public HashSet<Guid> VotedHipsterIds { get; set; } = new();
+    
+    [Parameter]
+    public Guid? CurrentUserId { get; set; }
     
     [Parameter]
     public EventCallback OnBrewCycleStarted { get; set; }

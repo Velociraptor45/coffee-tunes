@@ -47,6 +47,7 @@
                             BrewCycle="@currentBrewCycle"
                             JoinedHipsters="@joinedHipsters"
                             VotedHipsterIds="@votedHipsterIds"
+                            CurrentUserId="@currentUserId"
                             OnBrewCycleStarted="@HandleBrewCycleStarted" />
                     }
                     else if (activeView == ViewSwitcher.ViewIngredients)
@@ -88,6 +89,9 @@
 
     [Inject]
     public BarHubService HubService { get; set; } = default!;
+    
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
     private BarContract? bar;
     private List<IngredientContract> ingredients = new();
@@ -101,16 +105,21 @@
     private HashSet<Guid> votedHipsterIds = new();
     private List<ContributingHipsterContract> votedHipsters = new();
     private Dictionary<Guid, string> joinedHipsters = new(); // ID -> Name mapping
+    private Guid? currentUserId;
 
     protected override async Task OnInitializedAsync()
     {
         previousBarId = BarId;
+        
+        // Load current user info
+        await LoadCurrentUserInfo();
         
         // Set up SignalR event handlers
         HubService.OnBarUpdated += HandleBarUpdated;
         HubService.OnBrewCycleUpdated += HandleBrewCycleUpdated;
         HubService.OnBeanCast += HandleBeanCast;
         HubService.OnHipsterJoined += HandleHipsterJoined;
+        HubService.OnHipsterLeft += HandleHipsterLeft;
         
         await LoadBarData();
         
@@ -270,9 +279,19 @@
     
     private Task HandleHipsterJoined(HipsterJoinedContract hipsterJoined)
     {
+        // Dictionary already handles deduplication
         if (!joinedHipsters.ContainsKey(hipsterJoined.HipsterId))
         {
             joinedHipsters[hipsterJoined.HipsterId] = hipsterJoined.Name;
+            StateHasChanged();
+        }
+        return Task.CompletedTask;
+    }
+    
+    private Task HandleHipsterLeft(Guid hipsterId)
+    {
+        if (joinedHipsters.Remove(hipsterId))
+        {
             StateHasChanged();
         }
         return Task.CompletedTask;
@@ -300,6 +319,24 @@
         return Task.CompletedTask;
     }
     
+    private async Task LoadCurrentUserInfo()
+    {
+        if (AuthenticationStateTask != null)
+        {
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+            
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var subClaim = user.FindFirst("sub");
+                if (subClaim != null && Guid.TryParse(subClaim.Value, out var userId))
+                {
+                    currentUserId = userId;
+                }
+            }
+        }
+    }
+    
     public async ValueTask DisposeAsync()
     {
         // Unsubscribe from events
@@ -307,6 +344,7 @@
         HubService.OnBrewCycleUpdated -= HandleBrewCycleUpdated;
         HubService.OnBeanCast -= HandleBeanCast;
         HubService.OnHipsterJoined -= HandleHipsterJoined;
+        HubService.OnHipsterLeft -= HandleHipsterLeft;
         
         // Leave the bar
         try
