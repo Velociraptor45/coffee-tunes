@@ -12,4 +12,5 @@ public interface IBarClient
     Task BeanCast(BeanCastContract beanCastContract);
     Task HipsterJoined(HipsterJoinedContract hipsterJoinedContract);
     Task HipsterLeft(Guid hipsterId);
+    Task RevealBrewCycle(BrewCycleRevealContract revealContract);
 }

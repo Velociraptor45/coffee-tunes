@@ -102,6 +102,9 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
     
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        if(PresenceTracker.Connections.TryGetValue(Context.ConnectionId, out var hipsterId))
+            await Clients.Others.HipsterLeft(hipsterId.hipsterId);
+        
         PresenceTracker.OnDisconnected(Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
     }
@@ -110,7 +113,7 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
 public class PresenceTracker
 {
     // connectionId => groupName, hipsterId
-    private readonly ConcurrentDictionary<string, (string groupName, Guid hipsterId)> _connections = new();
+    public ConcurrentDictionary<string, (string groupName, Guid hipsterId)> Connections { get; } = new();
     // groupName => set of hipsterIds
     public ConcurrentDictionary<string, HashSet<Guid>> Trackers { get; } = new();
     
@@ -122,12 +125,12 @@ public class PresenceTracker
             hipsters.Add(hipsterId);
         }
         
-        _connections[connectionId] = (groupName, hipsterId);
+        Connections[connectionId] = (groupName, hipsterId);
     }
     
     public void OnDisconnected(string connectionId)
     {
-        if (!_connections.TryRemove(connectionId, out var info))
+        if (!Connections.TryRemove(connectionId, out var info))
             return;
         
         var (groupName, hipsterId) = info;

@@ -20,10 +20,10 @@ public class Ingredient
     public required bool Used { get; set; }
 
     [InverseProperty(nameof(Bean.Ingredient))]
-    public ICollection<Bean>? Beans { get; set; }
+    public ICollection<Bean> Beans { get; set; } = [];
 
     [InverseProperty(nameof(HipstersSubmittedIngredient.Ingredient))]
-    public ICollection<HipstersSubmittedIngredient>? Owners { get; set; }
+    public ICollection<HipstersSubmittedIngredient> Owners { get; set; } = [];
     
     [ForeignKey(nameof(BarId))]
     public Bar? Bar { get; set; }

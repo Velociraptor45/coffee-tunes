@@ -5,18 +5,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CoffeeTunes.WebApi.Services;
 
-public class BrewCycleService(CoffeeTunesDbContext dbContext)
+public class BrewCycleService(CoffeeTunesDbContext dbContext, BarService barService)
 {
     private static readonly Random Random = new();
-    
+
     public async Task<BrewCycleContract> StartNewCycleAsync(Guid barId, CancellationToken ct)
     {
         var count = await dbContext.Ingredients.AsNoTracking()
             .Where(i => i.BarId == barId && !i.Used)
             .CountAsync(ct);
-        
+
         var selectedIndex = Random.Next(0, count);
-        
+
         var ingredient = await dbContext.Ingredients
             .Include(i => i.Owners)
             .Where(i => i.BarId == barId && !i.Used)
@@ -26,5 +26,62 @@ public class BrewCycleService(CoffeeTunesDbContext dbContext)
         ingredient.Selected = true;
 
         return ingredient.ToBrewCycleContract();
+    }
+
+    public async Task<BrewCycleRevealContract> RevealIngredientAsync(Guid barId, Guid franchiseId, CancellationToken ct)
+    {
+        var bar = await barService.GetInSupplyBar(barId, franchiseId, ct);
+
+        if (!bar.IsOpen)
+            throw new InvalidOperationException("Cannot reveal ingredient while the bar is closed.");
+
+        var ingredient = await dbContext.Ingredients
+            .AsNoTracking()
+            .Include(i => i.Beans)
+            .ThenInclude(b => b.CastFrom)
+            .Include(i => i.Beans)
+            .ThenInclude(b => b.CastTo)
+            .Include(i => i.Owners)
+            .ThenInclude(o => o.Hipster)
+            .Where(i => i.BarId == barId && i.Selected && !i.Used)
+            .SingleAsync(ct);
+
+        var ownerHash = ingredient.Owners.Select(o => o.HipsterId).ToHashSet();
+
+        var contract = new BrewCycleRevealContract
+        {
+            IngredientId = ingredient.Id,
+            Owners = ingredient.Owners
+                .Select(o => new BrewCycleHipsterContract
+                {
+                    HipsterId = o.HipsterId,
+                    Name = o.Hipster!.Name
+                })
+                .ToList(),
+            Results = ingredient.Beans
+                .GroupBy(b => b.CastFromId)
+                .Select(bg => new BrewCycleBeanResultContract
+                {
+                    Hipster = new BrewCycleHipsterContract
+                    {
+                        HipsterId = bg.First().CastFromId,
+                        Name = bg.First().CastFrom!.Name
+                    },
+                    Beans = bg
+                        .Select(b => new BrewCycleCastBeanContract
+                        {
+                            HipsterCastFor = new BrewCycleHipsterContract
+                            {
+                                HipsterId = b.CastToId,
+                                Name = b.CastTo!.Name
+                            },
+                            WasCorrect = ownerHash.Contains(b.CastToId)
+                        })
+                        .ToList()
+                })
+                .ToList()
+        };
+        
+        return contract;
     }
 }

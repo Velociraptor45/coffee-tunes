@@ -17,7 +17,8 @@ public static class BrewCycleEndpoints
     public static void RegisterBrewCycleEndpoints(this IEndpointRouteBuilder endpoints)
     {
         endpoints
-            .RegisterStartBrewCycle();
+            .RegisterStartBrewCycle()
+            .RegisterRevealIngredientResults();
     }
 
     private static IEndpointRouteBuilder RegisterStartBrewCycle(this IEndpointRouteBuilder builder)
@@ -59,6 +60,36 @@ public static class BrewCycleEndpoints
         await hubContext.Clients
             .Group(BarHub.GetGroupName(franchiseId, barId))
             .BrewCycleUpdated(brewCycle);
+
+        return Results.NoContent();
+    }
+
+    private static IEndpointRouteBuilder RegisterRevealIngredientResults(this IEndpointRouteBuilder builder)
+    {
+        builder.MapPut($"/{_routeBase}/reveal", RevealIngredientResults)
+            .WithName(nameof(RevealIngredientResults))
+            .RequireAuthorization("User");
+
+        return builder;
+    }
+    
+    private static async Task<IResult> RevealIngredientResults(
+        [FromRoute] Guid franchiseId,
+        [FromRoute] Guid barId,
+        [FromServices] CoffeeTunesDbContext dbContext,
+        [FromServices] FranchiseAccessService franchiseAccessService,
+        [FromServices] BarService barService,
+        [FromServices] IHubContext<BarHub, IBarClient> hubContext,
+        [FromServices] BrewCycleService brewCycleService,
+        CancellationToken cancellationToken)
+    {
+        await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
+
+        var revealContract = await brewCycleService.RevealIngredientAsync(barId, franchiseId, cancellationToken);
+        
+        await hubContext.Clients
+            .Group(BarHub.GetGroupName(franchiseId, barId))
+            .RevealBrewCycle(revealContract);
 
         return Results.NoContent();
     }
