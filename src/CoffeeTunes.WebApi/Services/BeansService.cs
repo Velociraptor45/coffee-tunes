@@ -31,10 +31,24 @@ public class BeansService(CoffeeTunesDbContext dbContext, FranchiseAccessService
     {
         var (hipsterId, _) = accessService.GetHipsterInfoFromToken()
                              ?? throw new InvalidOperationException("Hipster information could not be retrieved from the access token.");
+        
+        var alreadyCastBeans = await dbContext.HipstersCastIngredientBeans
+            .AsNoTracking()
+            .AnyAsync(b => b.IngredientId == contract.IngredientId && b.HipsterId == hipsterId, ct);
+        if (alreadyCastBeans)
+            throw new InvalidOperationException("You've already cast beans for this ingredient.");
+        
         var owners = await GetIngredientOwnersAsync(contract.IngredientId, ct);
         
         if(contract.Beans.Count > owners.Count)
             throw new InvalidOperationException("You're not allowed to cast more beans than there are ingredient owners.");
+        
+        var hipsterCastBean = new HipstersCastIngredientBean
+        {
+            HipsterId = hipsterId,
+            IngredientId = contract.IngredientId,
+        };
+        await dbContext.HipstersCastIngredientBeans.AddAsync(hipsterCastBean, ct);
         
         foreach (var castBean in contract.Beans)
         {

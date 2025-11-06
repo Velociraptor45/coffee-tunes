@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using CoffeeTunes.Contracts;
+using CoffeeTunes.Contracts.Beans;
 using CoffeeTunes.Contracts.Hipsters;
 using CoffeeTunes.WebApi.Auth;
 using CoffeeTunes.WebApi.Contexts;
@@ -12,7 +13,8 @@ using Microsoft.EntityFrameworkCore;
 namespace CoffeeTunes.WebApi.Hubs;
 
 [Authorize("User")]
-public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService accessService, AuthOptions authOptions) : Hub<IBarClient>
+public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService accessService, AuthOptions authOptions)
+    : Hub<IBarClient>
 {
     private static readonly PresenceTracker PresenceTracker = new();
     public static string GetGroupName(Guid franchiseId, Guid barId) => $"{franchiseId}:{barId}";
@@ -60,6 +62,7 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
         if (!bar.IsOpen)
             return;
 
+        // show ingredient
         var ingredient = await dbContext.Ingredients
             .AsNoTracking()
             .Include(i => i.Owners)
@@ -71,6 +74,20 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
         
         var brewCycleContract = ingredient.ToBrewCycleContract();
         await Clients.Caller.BrewCycleUpdated(brewCycleContract);
+        
+        // check if hipster already cast beans
+        var alreadyCastBeans = await dbContext.HipstersCastIngredientBeans
+            .AsNoTracking()
+            .Where(b => b.IngredientId == ingredient.Id && b.HipsterId == hipsterId)
+            .AnyAsync();
+        
+        if (alreadyCastBeans)
+            await Clients.Caller.BeanCast(new BeanCastContract
+            {
+                HipsterId = hipsterId
+            });
+        
+        // reveal ingredient solution
     } 
     
     public async Task LeaveBar(Guid barId)
