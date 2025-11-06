@@ -3,27 +3,42 @@
 <div class="voters-list">
     <h3 class="voters-title">🗳️ Voters</h3>
     
-    @if (VotedHipsters.Any())
+    @if (JoinedHipsters.Any())
     {
-        <div class="voted-hipsters">
-            @foreach (var hipster in VotedHipsters)
+        <div class="vote-count">
+            @VotedHipsterIds.Count/@JoinedHipsters.Count
+        </div>
+        
+        <div class="hipsters-list">
+            @foreach (var hipster in JoinedHipsters.OrderBy(h => h.Value))
             {
-                <div class="voter-item">
-                    <span class="voter-icon">✓</span>
-                    <span class="voter-name">@hipster.Name</span>
+                var hasVoted = VotedHipsterIds.Contains(hipster.Key);
+                <div class="hipster-item @(hasVoted ? "voted" : "")">
+                    @if (hasVoted)
+                    {
+                        <span class="vote-checkmark">✓</span>
+                    }
+                    else
+                    {
+                        <span class="vote-pending">○</span>
+                    }
+                    <span class="hipster-name">@hipster.Value</span>
                 </div>
             }
         </div>
     }
     else
     {
-        <div class="no-voters">
-            <p>No one has voted yet...</p>
+        <div class="no-hipsters">
+            <p>No hipsters have joined yet...</p>
         </div>
     }
 </div>
 
 @code {
     [Parameter]
-    public List<ContributingHipsterContract> VotedHipsters { get; set; } = new();
+    public Dictionary<Guid, string> JoinedHipsters { get; set; } = new();
+    
+    [Parameter]
+    public HashSet<Guid> VotedHipsterIds { get; set; } = new();
 }

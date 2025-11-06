@@ -71,10 +71,13 @@ else
                         Bar="@Bar"
                         FranchiseId="@FranchiseId"
                         BarId="@BarId"
-                        BrewCycle="@BrewCycle" />
+                        BrewCycle="@BrewCycle"
+                        HasCurrentUserVoted="@(CurrentUserId.HasValue && VotedHipsterIds.Contains(CurrentUserId.Value))" />
                 </div>
                 <div class="right-lower">
-                    <VotersList VotedHipsters="@VotedHipsters" />
+                    <VotersList 
+                        JoinedHipsters="@JoinedHipsters"
+                        VotedHipsterIds="@VotedHipsterIds" />
                 </div>
             </div>
         </div>
@@ -95,7 +98,13 @@ else
     public BrewCycleContract? BrewCycle { get; set; }
     
     [Parameter]
-    public List<ContributingHipsterContract> VotedHipsters { get; set; } = new();
+    public Dictionary<Guid, string> JoinedHipsters { get; set; } = new();
+    
+    [Parameter]
+    public HashSet<Guid> VotedHipsterIds { get; set; } = new();
+    
+    [Parameter]
+    public Guid? CurrentUserId { get; set; }
     
     [Parameter]
     public EventCallback OnBrewCycleStarted { get; set; }

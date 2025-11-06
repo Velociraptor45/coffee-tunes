@@ -6,6 +6,7 @@ using CoffeeTunes.Frontend.Auth;
 using CoffeeTunes.Frontend.Configs;
 using CoffeeTunes.Frontend.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -64,16 +65,20 @@ static void ConfigureHttpClient(WebAssemblyHostBuilder builder)
 
     builder.Services.AddScoped<CustomAddressAuthorizationMessageHandler>();
 
-    builder.Services.AddRestEaseClient<ICoffeeTunesApi>(
-        connectionConfig.ApiUri,
-        opt =>
-        {
-            opt.JsonSerializerSettings = new JsonSerializerSettings
+    builder.Services
+        .AddRestEaseClient<ICoffeeTunesApi>(
+            connectionConfig.ApiUri,
+            opt =>
             {
-                NullValueHandling = NullValueHandling.Ignore,
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                DateFormatHandling = DateFormatHandling.IsoDateFormat
-            };
-        })
-        .AddHttpMessageHandler<CustomAddressAuthorizationMessageHandler>();
+                opt.JsonSerializerSettings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                    DateFormatHandling = DateFormatHandling.IsoDateFormat
+                };
+            })
+        .AddHttpMessageHandler(sp => new CustomAddressAuthorizationMessageHandler(
+            sp.GetRequiredService<IAccessTokenProvider>(),
+            sp.GetRequiredService<NavigationManager>(),
+            connectionConfig));
 }

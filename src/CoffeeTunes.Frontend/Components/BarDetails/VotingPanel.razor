@@ -73,6 +73,9 @@
     [Parameter]
     public required BrewCycleContract BrewCycle { get; set; }
     
+    [Parameter]
+    public bool HasCurrentUserVoted { get; set; }
+    
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
     
@@ -95,6 +98,12 @@
     protected override void OnParametersSet()
     {
         CalculateVotingData();
+        
+        // Set isSubmitted based on external parameter (from BeanCast SignalR events)
+        if (HasCurrentUserVoted && !isSubmitted)
+        {
+            isSubmitted = true;
+        }
     }
     
     private async Task LoadUserInfo()
@@ -140,9 +149,9 @@
             availableBeans = ownerCount;
         }
         
-        // Reset selection state
+        // Reset selection state only if not already submitted
         selectedHipsters.Clear();
-        isSubmitted = false;
+        // Don't reset isSubmitted - once beans are cast, keep the success message visible
     }
     
     private void ToggleHipster(Guid hipsterId)

@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using CoffeeTunes.Contracts;
+using CoffeeTunes.Contracts.Beans;
 using CoffeeTunes.Contracts.Hipsters;
+using CoffeeTunes.WebApi.Auth;
 using CoffeeTunes.WebApi.Contexts;
 using CoffeeTunes.WebApi.Mappers;
 using CoffeeTunes.WebApi.Services;
@@ -11,9 +13,10 @@ using Microsoft.EntityFrameworkCore;
 namespace CoffeeTunes.WebApi.Hubs;
 
 [Authorize("User")]
-public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService accessService) : Hub<IBarClient>
+public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService accessService, AuthOptions authOptions)
+    : Hub<IBarClient>
 {
-    private readonly PresenceTracker _presenceTracker = new();
+    private static readonly PresenceTracker PresenceTracker = new();
     public static string GetGroupName(Guid franchiseId, Guid barId) => $"{franchiseId}:{barId}";
     
     public async Task JoinBar(Guid barId)
@@ -31,10 +34,17 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
         
         var groupName = GetGroupName(bar.FranchiseId, bar.Id);
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-        _presenceTracker.OnConnected(groupName, hipsterId, Context.ConnectionId);
+
+        await Clients.Others.HipsterJoined(new HipsterJoinedContract
+        {
+            HipsterId = hipsterId,
+            Name = Context.User.Claims.First(c => c.Type == authOptions.NameClaimType).Value
+        });
+        
+        PresenceTracker.OnConnected(groupName, hipsterId, Context.ConnectionId);
 
         // notify about existing online hipsters
-        var onlineHipsters = _presenceTracker.Trackers.GetValueOrDefault(groupName, new HashSet<Guid>());
+        var onlineHipsters = PresenceTracker.Trackers.GetValueOrDefault(groupName, new HashSet<Guid>());
         var hipsters = await dbContext.Hipsters
             .AsNoTracking()
             .Where(h => onlineHipsters.Contains(h.Id))
@@ -52,6 +62,7 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
         if (!bar.IsOpen)
             return;
 
+        // show ingredient
         var ingredient = await dbContext.Ingredients
             .AsNoTracking()
             .Include(i => i.Owners)
@@ -63,6 +74,20 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
         
         var brewCycleContract = ingredient.ToBrewCycleContract();
         await Clients.Caller.BrewCycleUpdated(brewCycleContract);
+        
+        // check if hipster already cast beans
+        var alreadyCastBeans = await dbContext.HipstersCastIngredientBeans
+            .AsNoTracking()
+            .Where(b => b.IngredientId == ingredient.Id && b.HipsterId == hipsterId)
+            .AnyAsync();
+        
+        if (alreadyCastBeans)
+            await Clients.All.BeanCast(new BeanCastContract
+            {
+                HipsterId = hipsterId
+            });
+        
+        // reveal ingredient solution
     } 
     
     public async Task LeaveBar(Guid barId)
@@ -70,12 +95,14 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
         var hipsterId = Guid.Parse(Context.User!.Claims.First(c => c.Type == "sub").Value);
         await accessService.EnsureAccessToBarAsync(hipsterId, barId, CancellationToken.None);
         
-        _presenceTracker.OnDisconnected(Context.ConnectionId);
+        await Clients.Others.HipsterLeft(hipsterId);
+        
+        PresenceTracker.OnDisconnected(Context.ConnectionId);
     }
     
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _presenceTracker.OnDisconnected(Context.ConnectionId);
+        PresenceTracker.OnDisconnected(Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
     }
 }
