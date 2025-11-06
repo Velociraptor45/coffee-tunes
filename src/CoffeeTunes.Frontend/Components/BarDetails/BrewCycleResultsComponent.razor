@@ -18,31 +18,38 @@
     
     <div class="votes-section">
         <h4 class="section-title">🗳️ Voting Results:</h4>
-        <div class="votes-list">
-            @foreach (var result in Results.Results.OrderByDescending(r => r.Beans.Count))
+        <div class="votes-chart">
+            @foreach (var barData in GetBarChartData())
             {
-                <div class="voter-result">
-                    <div class="voter-header">
-                        <span class="voter-icon">👤</span>
-                        <span class="voter-name">@result.Hipster.Name</span>
-                        <span class="bean-count">@result.Beans.Count bean@(result.Beans.Count == 1 ? "" : "s")</span>
+                var isCorrectOwner = ownerIds.Contains(barData.HipsterId);
+                <div class="vote-bar @(isCorrectOwner ? "correct-owner" : "")">
+                    <div class="bar-header">
+                        <span class="bar-icon">👤</span>
+                        <span class="bar-name">@barData.HipsterName</span>
+                        <span class="bar-vote-count">@barData.VoteCount vote@(barData.VoteCount == 1 ? "" : "s")</span>
+                        @if (isCorrectOwner)
+                        {
+                            <span class="correct-badge">✓ CORRECT</span>
+                        }
                     </div>
                     
-                    @if (result.Beans.Any())
+                    @if (barData.VoteCount > 0)
                     {
-                        <div class="cast-beans">
-                            @foreach (var bean in result.Beans)
+                        <div class="bar-visual">
+                            <div class="bar-fill" style="width: @GetBarWidth(barData.VoteCount)%"></div>
+                        </div>
+                        
+                        <div class="bar-voters">
+                            <span class="voters-label">Voted by:</span>
+                            @foreach (var voter in barData.Voters)
                             {
-                                <div class="bean-item @(bean.WasCorrect ? "correct" : "incorrect")">
-                                    <span class="bean-icon">@(bean.WasCorrect ? "✓" : "✗")</span>
-                                    <span class="bean-hipster">@bean.HipsterCastFor.Name</span>
-                                </div>
+                                <span class="voter-chip">@voter</span>
                             }
                         </div>
                     }
                     else
                     {
-                        <div class="no-beans">No beans cast</div>
+                        <div class="no-votes">No votes received</div>
                     }
                 </div>
             }
@@ -53,4 +60,78 @@
 @code {
     [Parameter]
     public required BrewCycleRevealContract Results { get; set; }
+    
+    private HashSet<Guid> ownerIds = new();
+    private int maxVotes = 0;
+    
+    protected override void OnParametersSet()
+    {
+        ownerIds = Results.Owners.Select(o => o.HipsterId).ToHashSet();
+        
+        // Calculate max votes for bar chart scaling
+        var voteCounts = GetBarChartData().Select(b => b.VoteCount).ToList();
+        maxVotes = voteCounts.Any() ? voteCounts.Max() : 1;
+    }
+    
+    private class BarChartData
+    {
+        public required Guid HipsterId { get; set; }
+        public required string HipsterName { get; set; }
+        public required int VoteCount { get; set; }
+        public required List<string> Voters { get; set; }
+    }
+    
+    private List<BarChartData> GetBarChartData()
+    {
+        // Group all votes by the hipster who received them
+        var votesByRecipient = new Dictionary<Guid, List<string>>();
+        var hipsterNames = new Dictionary<Guid, string>();
+        
+        // Process all beans to see who voted for whom
+        foreach (var result in Results.Results)
+        {
+            foreach (var bean in result.Beans)
+            {
+                var recipientId = bean.HipsterCastFor.HipsterId;
+                var voterName = result.Hipster.Name;
+                
+                if (!votesByRecipient.ContainsKey(recipientId))
+                {
+                    votesByRecipient[recipientId] = new List<string>();
+                }
+                votesByRecipient[recipientId].Add(voterName);
+                hipsterNames[recipientId] = bean.HipsterCastFor.Name;
+            }
+        }
+        
+        // Also include hipsters who received no votes
+        foreach (var result in Results.Results)
+        {
+            var hipsterId = result.Hipster.HipsterId;
+            if (!votesByRecipient.ContainsKey(hipsterId))
+            {
+                votesByRecipient[hipsterId] = new List<string>();
+                hipsterNames[hipsterId] = result.Hipster.Name;
+            }
+        }
+        
+        // Create bar chart data and sort: descending by vote count, then alphabetically
+        return votesByRecipient
+            .Select(kvp => new BarChartData
+            {
+                HipsterId = kvp.Key,
+                HipsterName = hipsterNames[kvp.Key],
+                VoteCount = kvp.Value.Count,
+                Voters = kvp.Value.OrderBy(v => v).ToList()
+            })
+            .OrderByDescending(b => b.VoteCount)
+            .ThenBy(b => b.HipsterName)
+            .ToList();
+    }
+    
+    private string GetBarWidth(int voteCount)
+    {
+        if (maxVotes == 0) return "0";
+        return ((voteCount * 100.0) / maxVotes).ToString("F1");
+    }
 }
