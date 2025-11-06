@@ -67,7 +67,7 @@ public static class BrewCycleEndpoints
 
     private static IEndpointRouteBuilder RegisterRevealIngredientResults(this IEndpointRouteBuilder builder)
     {
-        builder.MapGet($"/{_routeBase}/reveal", RevealIngredientResults)
+        builder.MapPut($"/{_routeBase}/reveal", RevealIngredientResults)
             .WithName(nameof(RevealIngredientResults))
             .RequireAuthorization("User");
 
