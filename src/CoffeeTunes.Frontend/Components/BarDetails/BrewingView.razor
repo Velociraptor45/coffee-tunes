@@ -45,24 +45,14 @@ else
         
         <div class="brewing-content">
             <div class="brewing-left">
-                <div class="ingredient-display">
-                    <h3 class="ingredient-title">@BrewCycle.Ingredient.Name</h3>
-                    <div class="ingredient-video">
-                        <iframe 
-                            src="@GetEmbedUrl(BrewCycle.Ingredient.Url)" 
-                            title="@BrewCycle.Ingredient.Name"
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-                    <div class="ingredient-link">
-                        <a href="@BrewCycle.Ingredient.Url" target="_blank" rel="noopener noreferrer" class="watch-link">
-                            <span>🎥</span>
-                            <span>Watch on YouTube</span>
-                        </a>
-                    </div>
-                </div>
+                @if (RevealResults == null)
+                {
+                    <IngredientVideoComponent Ingredient="@BrewCycle.Ingredient" />
+                }
+                else
+                {
+                    <BrewCycleResultsComponent Results="@RevealResults" />
+                }
             </div>
             
             <div class="brewing-right">
@@ -72,12 +62,16 @@ else
                         FranchiseId="@FranchiseId"
                         BarId="@BarId"
                         BrewCycle="@BrewCycle"
-                        HasCurrentUserVoted="@(CurrentUserId.HasValue && VotedHipsterIds.Contains(CurrentUserId.Value))" />
+                        HasCurrentUserVoted="@(CurrentUserId.HasValue && VotedHipsterIds.Contains(CurrentUserId.Value))"
+                        IsRevealed="@(RevealResults != null)" />
                 </div>
                 <div class="right-lower">
                     <VotersList 
                         JoinedHipsters="@JoinedHipsters"
-                        VotedHipsterIds="@VotedHipsterIds" />
+                        VotedHipsterIds="@VotedHipsterIds"
+                        FranchiseId="@FranchiseId"
+                        BarId="@BarId"
+                        IsRevealed="@(RevealResults != null)" />
                 </div>
             </div>
         </div>
@@ -109,6 +103,9 @@ else
     [Parameter]
     public EventCallback OnBrewCycleStarted { get; set; }
     
+    [Parameter]
+    public BrewCycleRevealContract? RevealResults { get; set; }
+    
     [Inject]
     public ICoffeeTunesApi Api { get; set; } = default!;
     
@@ -129,37 +126,6 @@ else
         finally
         {
             isStarting = false;
-        }
-    }
-    
-    private string GetEmbedUrl(string youtubeUrl)
-    {
-        try
-        {
-            // Convert YouTube watch URL to embed URL
-            // https://www.youtube.com/watch?v=VIDEO_ID -> https://www.youtube.com/embed/VIDEO_ID
-            var uri = new Uri(youtubeUrl);
-            
-            // Parse query string manually for Blazor WebAssembly compatibility
-            var query = uri.Query.TrimStart('?');
-            var videoId = query.Split('&')
-                .Select(param => param.Split('='))
-                .Where(parts => parts.Length == 2 && parts[0] == "v")
-                .Select(parts => parts[1])
-                .FirstOrDefault();
-                
-            if (string.IsNullOrEmpty(videoId))
-            {
-                // If no video ID found, return original URL
-                return youtubeUrl;
-            }
-            
-            return $"https://www.youtube.com/embed/{videoId}";
-        }
-        catch
-        {
-            // If URL parsing fails, return original URL
-            return youtubeUrl;
         }
     }
 }

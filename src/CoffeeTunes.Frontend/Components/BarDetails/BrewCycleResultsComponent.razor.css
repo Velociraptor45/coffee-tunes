@@ -1,0 +1,141 @@
+.results-display {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.results-title {
+    color: #d4a574;
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.section-title {
+    color: #d4a574;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.owners-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(212, 165, 116, 0.3);
+}
+
+.owners-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.owner-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: rgba(212, 165, 116, 0.1);
+    border-radius: 6px;
+    border: 2px solid rgba(212, 165, 116, 0.4);
+    color: #d4a574;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.owner-icon {
+    font-size: 1.5rem;
+}
+
+.owner-name {
+    flex: 1;
+}
+
+.votes-section {
+    margin-top: 1rem;
+}
+
+.votes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.voter-result {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    padding: 1rem;
+    border: 1px solid rgba(212, 165, 116, 0.2);
+}
+
+.voter-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(212, 165, 116, 0.2);
+}
+
+.voter-icon {
+    font-size: 1.25rem;
+}
+
+.voter-name {
+    flex: 1;
+    color: #d4a574;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.bean-count {
+    color: #a88966;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+}
+
+.cast-beans {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.bean-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
+}
+
+.bean-item.correct {
+    background: rgba(76, 175, 80, 0.15);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    color: #4caf50;
+}
+
+.bean-item.incorrect {
+    background: rgba(244, 67, 54, 0.15);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    color: #f44336;
+}
+
+.bean-icon {
+    font-weight: bold;
+}
+
+.bean-hipster {
+    color: #a88966;
+}
+
+.no-beans {
+    color: #a88966;
+    font-style: italic;
+    padding: 0.5rem;
+    text-align: center;
+}

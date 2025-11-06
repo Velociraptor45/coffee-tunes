@@ -20,6 +20,7 @@ public class BarHubService : IAsyncDisposable
     public event Func<BeanCastContract, Task>? OnBeanCast;
     public event Func<HipsterJoinedContract, Task>? OnHipsterJoined;
     public event Func<Guid, Task>? OnHipsterLeft;
+    public event Func<BrewCycleRevealContract, Task>? OnBrewCycleRevealed;
     
     public BarHubService(IAccessTokenProvider tokenProvider, ConnectionConfig connectionConfig)
     {
@@ -85,6 +86,12 @@ public class BarHubService : IAsyncDisposable
         {
             if (OnHipsterLeft != null)
                 await OnHipsterLeft.Invoke(hipsterId);
+        });
+        
+        _connection.On<BrewCycleRevealContract>(nameof(IBarClient.RevealBrewCycle), async (revealContract) =>
+        {
+            if (OnBrewCycleRevealed != null)
+                await OnBrewCycleRevealed.Invoke(revealContract);
         });
         
         await _connection.StartAsync();

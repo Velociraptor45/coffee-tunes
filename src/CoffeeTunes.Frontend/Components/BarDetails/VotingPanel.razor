@@ -7,7 +7,14 @@
 <div class="voting-panel">
     <h3 class="voting-title">☕ Cast Your Beans</h3>
     
-    @if (isSubmitted)
+    @if (IsRevealed)
+    {
+        <div class="voting-revealed">
+            <div class="revealed-icon">🔒</div>
+            <p>Results have been revealed!</p>
+        </div>
+    }
+    else if (isSubmitted)
     {
         <div class="voting-submitted">
             <div class="success-icon">✓</div>
@@ -75,6 +82,9 @@
     
     [Parameter]
     public bool HasCurrentUserVoted { get; set; }
+    
+    [Parameter]
+    public bool IsRevealed { get; set; }
     
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
