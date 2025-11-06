@@ -21,6 +21,10 @@ public interface ICoffeeTunesApi
 
     [Put("v1/{franchiseId}/bars/{barId}/next")]
     Task NextIngredient([Path] Guid franchiseId, [Path] Guid barId);
+    
+    // Beans endpoints
+    [Post("v1/{franchiseId}/bars/{barId}/beans")]
+    Task CastBeans([Path] Guid franchiseId, [Path] Guid barId, [Body] CastBeansContract contract);
 
     // Bar endpoints
     [Post("v1/{franchiseId}/bars")]
