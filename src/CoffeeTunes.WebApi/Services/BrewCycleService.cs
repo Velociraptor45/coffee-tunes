@@ -1,5 +1,7 @@
+using CoffeeTunes.Contracts.Bars;
 using CoffeeTunes.Contracts.BrewCycles;
 using CoffeeTunes.WebApi.Contexts;
+using CoffeeTunes.WebApi.Entities;
 using CoffeeTunes.WebApi.Mappers;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,7 +11,41 @@ public class BrewCycleService(CoffeeTunesDbContext dbContext, BarService barServ
 {
     private static readonly Random Random = new();
 
+    public async Task<BrewCycleContract> SelectNextIngredientAsync(Guid barId, Guid franchiseId, CancellationToken ct)
+    {
+        var bar = await dbContext.Bars
+            .Where(b => b.Id == barId && b.FranchiseId == franchiseId)
+            .FirstOrDefaultAsync(ct);
+
+        if (bar is null)
+            throw new InvalidOperationException("Bar not found in the specified franchise.");
+
+        if (!bar.IsOpen)
+            throw new InvalidOperationException("Cannot select next ingredient while the bar is closed.");
+
+        var currentIngredient = await dbContext.Ingredients
+            .Where(i => i.BarId == barId && i.Selected && !i.Used)
+            .SingleAsync(ct);
+
+        currentIngredient.Selected = false;
+        currentIngredient.Used = true;
+
+        await dbContext.SaveChangesAsync(ct);
+
+        var ingredient = await SelectNextIngredient(barId, ct);
+        await dbContext.SaveChangesAsync(ct);
+
+        return ingredient.ToBrewCycleContract();
+    }
+
     public async Task<BrewCycleContract> StartNewCycleAsync(Guid barId, CancellationToken ct)
+    {
+        var ingredient = await SelectNextIngredient(barId, ct);
+
+        return ingredient.ToBrewCycleContract();
+    }
+
+    private async Task<Ingredient> SelectNextIngredient(Guid barId, CancellationToken ct)
     {
         var count = await dbContext.Ingredients.AsNoTracking()
             .Where(i => i.BarId == barId && !i.Used)
@@ -24,8 +60,30 @@ public class BrewCycleService(CoffeeTunesDbContext dbContext, BarService barServ
             .FirstAsync(ct);
 
         ingredient.Selected = true;
+        return ingredient;
+    }
 
-        return ingredient.ToBrewCycleContract();
+    public async Task<BarContract> EndCycleAsync(Guid barId, Guid franchiseId, CancellationToken ct)
+    {
+        var ingredient = await dbContext.Ingredients
+            .Where(i => i.BarId == barId && i.Selected && !i.Used)
+            .SingleAsync(ct);
+
+        ingredient.Selected = false;
+        ingredient.Used = true;
+
+        var bar = await dbContext.Bars
+            .Where(b => b.Id == barId && b.FranchiseId == franchiseId)
+            .FirstOrDefaultAsync(ct);
+
+        if (bar is null)
+            throw new InvalidOperationException("Bar not found in the specified franchise.");
+
+        bar.IsOpen = false;
+
+        await dbContext.SaveChangesAsync(ct);
+
+        return await barService.GetBarContractAsync(barId, franchiseId, ct);
     }
 
     public async Task<BrewCycleRevealContract> RevealIngredientAsync(Guid barId, Guid franchiseId, CancellationToken ct)
@@ -81,7 +139,7 @@ public class BrewCycleService(CoffeeTunesDbContext dbContext, BarService barServ
                 })
                 .ToList()
         };
-        
+
         return contract;
     }
 }

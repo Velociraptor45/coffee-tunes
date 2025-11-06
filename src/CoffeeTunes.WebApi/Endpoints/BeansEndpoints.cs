@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using CoffeeTunes.Contracts;
-using CoffeeTunes.Contracts.Bars;
 using CoffeeTunes.Contracts.Beans;
 using CoffeeTunes.WebApi.Hubs;
 using CoffeeTunes.WebApi.Services;
