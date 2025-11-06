@@ -82,7 +82,7 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
             .AnyAsync();
         
         if (alreadyCastBeans)
-            await Clients.Caller.BeanCast(new BeanCastContract
+            await Clients.All.BeanCast(new BeanCastContract
             {
                 HipsterId = hipsterId
             });
