@@ -51,7 +51,11 @@ else
                 }
                 else
                 {
-                    <BrewCycleResultsComponent Results="@RevealResults" />
+                    <BrewCycleResultsComponent 
+                        Results="@RevealResults" 
+                        VideoName="@BrewCycle.Ingredient.Name"
+                        FranchiseId="@FranchiseId"
+                        BarId="@BarId" />
                 }
             </div>
             

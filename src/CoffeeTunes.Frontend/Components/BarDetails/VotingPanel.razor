@@ -109,8 +109,13 @@
     {
         CalculateVotingData();
         
+        // Reset isSubmitted when new ingredient arrives (HasCurrentUserVoted will be false)
+        if (!HasCurrentUserVoted)
+        {
+            isSubmitted = false;
+        }
         // Set isSubmitted based on external parameter (from BeanCast SignalR events)
-        if (HasCurrentUserVoted && !isSubmitted)
+        else if (HasCurrentUserVoted && !isSubmitted)
         {
             isSubmitted = true;
         }

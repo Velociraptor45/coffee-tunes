@@ -1,10 +1,16 @@
 @using CoffeeTunes.Contracts.BrewCycles
+@using CoffeeTunes.Contracts
 
 <div class="results-display">
     <h3 class="results-title">☕ Brewing Results</h3>
     
+    <div class="video-name-section">
+        <h4 class="video-name-title">🎵 Video:</h4>
+        <p class="video-name">@VideoName</p>
+    </div>
+    
     <div class="owners-section">
-        <h4 class="section-title">🎵 Submitted by:</h4>
+        <h4 class="section-title">👤 Submitted by:</h4>
         <div class="owners-list">
             @foreach (var owner in Results.Owners)
             {
@@ -55,14 +61,62 @@
             }
         </div>
     </div>
+    
+    <div class="brew-cycle-actions">
+        <button 
+            class="next-ingredient-button" 
+            @onclick="HandleNextIngredient"
+            disabled="@isProcessing">
+            @if (isProcessing && processingAction == "next")
+            {
+                <span class="button-spinner">⏳</span>
+                <span>Loading...</span>
+            }
+            else
+            {
+                <span class="button-icon">➡️</span>
+                <span>Next Ingredient</span>
+            }
+        </button>
+        
+        <button 
+            class="end-brew-cycle-button" 
+            @onclick="HandleEndBrewCycle"
+            disabled="@isProcessing">
+            @if (isProcessing && processingAction == "end")
+            {
+                <span class="button-spinner">⏳</span>
+                <span>Ending...</span>
+            }
+            else
+            {
+                <span class="button-icon">🏁</span>
+                <span>End Brew Cycle</span>
+            }
+        </button>
+    </div>
 </div>
 
 @code {
     [Parameter]
     public required BrewCycleRevealContract Results { get; set; }
     
+    [Parameter]
+    public required string VideoName { get; set; }
+    
+    [Parameter]
+    public required Guid FranchiseId { get; set; }
+    
+    [Parameter]
+    public required Guid BarId { get; set; }
+    
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+    
     private HashSet<Guid> ownerIds = new();
     private int maxVotes = 0;
+    private bool isProcessing = false;
+    private string processingAction = "";
     
     protected override void OnParametersSet()
     {
@@ -71,6 +125,44 @@
         // Calculate max votes for bar chart scaling
         var voteCounts = GetBarChartData().Select(b => b.VoteCount).ToList();
         maxVotes = voteCounts.Any() ? voteCounts.Max() : 1;
+    }
+    
+    private async Task HandleNextIngredient()
+    {
+        isProcessing = true;
+        processingAction = "next";
+        try
+        {
+            await Api.NextIngredient(FranchiseId, BarId);
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error selecting next ingredient: {ex.Message}");
+        }
+        finally
+        {
+            isProcessing = false;
+            processingAction = "";
+        }
+    }
+    
+    private async Task HandleEndBrewCycle()
+    {
+        isProcessing = true;
+        processingAction = "end";
+        try
+        {
+            await Api.EndBrewCycle(FranchiseId, BarId);
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error ending brew cycle: {ex.Message}");
+        }
+        finally
+        {
+            isProcessing = false;
+            processingAction = "";
+        }
     }
     
     private class BarChartData

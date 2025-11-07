@@ -11,6 +11,31 @@
     text-align: center;
 }
 
+.video-name-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(212, 165, 116, 0.3);
+}
+
+.video-name-title {
+    color: #d4a574;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.video-name {
+    color: #e8d4bf;
+    font-size: 1rem;
+    padding: 0.75rem;
+    background: rgba(212, 165, 116, 0.1);
+    border-radius: 6px;
+    border: 1px solid rgba(212, 165, 116, 0.3);
+    margin: 0;
+}
+
 .section-title {
     color: #d4a574;
     font-size: 1.25rem;
@@ -167,4 +192,75 @@
     padding: 0.5rem;
     text-align: center;
     font-size: 0.9rem;
+}
+
+.brew-cycle-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(212, 165, 116, 0.3);
+}
+
+.next-ingredient-button,
+.end-brew-cycle-button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.next-ingredient-button {
+    background: linear-gradient(135deg, #d4a574 0%, #b8935d 100%);
+    color: #2c1810;
+}
+
+.next-ingredient-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #e8b686 0%, #d4a574 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 165, 116, 0.4);
+}
+
+.end-brew-cycle-button {
+    background: linear-gradient(135deg, #c44536 0%, #a83729 100%);
+    color: #fff;
+}
+
+.end-brew-cycle-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #d85648 0%, #c44536 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(196, 69, 54, 0.4);
+}
+
+.next-ingredient-button:disabled,
+.end-brew-cycle-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.button-icon {
+    font-size: 1.2rem;
+}
+
+.button-spinner {
+    font-size: 1.2rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
