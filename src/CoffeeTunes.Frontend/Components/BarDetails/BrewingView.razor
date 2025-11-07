@@ -55,7 +55,9 @@ else
                         Results="@RevealResults" 
                         VideoName="@BrewCycle.Ingredient.Name"
                         FranchiseId="@FranchiseId"
-                        BarId="@BarId" />
+                        BarId="@BarId"
+                        Bar="@Bar"
+                        OnIngredientsChanged="@OnIngredientsChanged" />
                 }
             </div>
             
@@ -109,6 +111,9 @@ else
     
     [Parameter]
     public BrewCycleRevealContract? RevealResults { get; set; }
+    
+    [Parameter]
+    public EventCallback OnIngredientsChanged { get; set; }
     
     [Inject]
     public ICoffeeTunesApi Api { get; set; } = default!;

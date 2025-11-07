@@ -49,7 +49,8 @@
                             VotedHipsterIds="@votedHipsterIds"
                             CurrentUserId="@currentUserId"
                             OnBrewCycleStarted="@HandleBrewCycleStarted"
-                            RevealResults="@revealResults" />
+                            RevealResults="@revealResults"
+                            OnIngredientsChanged="@HandleIngredientsChanged" />
                     }
                     else if (activeView == ViewSwitcher.ViewIngredients)
                     {
@@ -337,6 +338,15 @@
     {
         // This will be handled by SignalR updates
         return Task.CompletedTask;
+    }
+    
+    private async Task HandleIngredientsChanged()
+    {
+        // Reload ingredients if we're on the ingredients view
+        if (activeView == ViewSwitcher.ViewIngredients)
+        {
+            await LoadIngredients();
+        }
     }
     
     private async Task LoadCurrentUserInfo()

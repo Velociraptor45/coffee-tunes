@@ -251,6 +251,20 @@
     font-size: 1.2rem;
 }
 
+.loading-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    color: #d4a574;
+    font-size: 1rem;
+}
+
+.button-spinner {
+    font-size: 1.2rem;
+}
+
 .button-spinner {
     font-size: 1.2rem;
     animation: spin 1s linear infinite;
