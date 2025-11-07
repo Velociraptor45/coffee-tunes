@@ -81,6 +81,13 @@ public class BrewCycleService(CoffeeTunesDbContext dbContext, BarService barServ
 
         bar.IsOpen = false;
 
+        var remainingIngredientCount = await dbContext.Ingredients.AsNoTracking()
+            .Where(i => i.BarId == barId && !i.Used && !i.Selected)
+            .CountAsync(ct);
+        
+        if (remainingIngredientCount == 0)
+            bar.HasSupplyLeft = false;
+        
         await dbContext.SaveChangesAsync(ct);
 
         return await barService.GetBarContractAsync(barId, franchiseId, ct);
