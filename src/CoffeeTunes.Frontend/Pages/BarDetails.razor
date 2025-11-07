@@ -259,6 +259,15 @@
         if (updatedBar.Id == BarId)
         {
             bar = updatedBar;
+            
+            // When the bar is closed (brew cycle ended), clear the current brew cycle
+            if (!updatedBar.IsOpen && currentBrewCycle != null)
+            {
+                currentBrewCycle = null;
+                revealResults = null;
+                ResetVotingState();
+            }
+            
             StateHasChanged();
         }
         return Task.CompletedTask;

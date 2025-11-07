@@ -144,14 +144,16 @@
         if (!currentUserId.HasValue)
             return;
         
-        // Filter out the current user from selectable hipsters
+        // Get the IDs of hipsters who submitted the current ingredient
+        var ownerIds = BrewCycle.Ingredient.OwnerHipsterIds.ToHashSet();
+        
+        // Filter to show only hipsters who submitted this ingredient (excluding the current user)
         selectableHipsters = Bar.ContributingHipsters
-            .Where(h => h.Id != currentUserId.Value)
+            .Where(h => ownerIds.Contains(h.Id) && h.Id != currentUserId.Value)
             .ToList();
         
         // Calculate available beans
         // Number of beans = number of owners of the current ingredient
-        var ownerIds = BrewCycle.Ingredient.OwnerHipsterIds.ToHashSet();
         var ownerCount = ownerIds.Count;
         
         // If current user is one of the owners, they have one less bean

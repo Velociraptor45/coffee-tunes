@@ -179,6 +179,16 @@
         var votesByRecipient = new Dictionary<Guid, List<string>>();
         var hipsterNames = new Dictionary<Guid, string>();
         
+        // First, ensure all owners are in the results with 0 votes
+        foreach (var owner in Results.Owners)
+        {
+            if (!votesByRecipient.ContainsKey(owner.HipsterId))
+            {
+                votesByRecipient[owner.HipsterId] = new List<string>();
+            }
+            hipsterNames[owner.HipsterId] = owner.Name;
+        }
+        
         // Process all beans to see who voted for whom
         foreach (var result in Results.Results)
         {
@@ -196,7 +206,7 @@
             }
         }
         
-        // Also include hipsters who received no votes
+        // Also include hipsters who voted but received no votes (if not already included)
         foreach (var result in Results.Results)
         {
             var hipsterId = result.Hipster.HipsterId;
