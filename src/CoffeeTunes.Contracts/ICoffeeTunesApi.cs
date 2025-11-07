@@ -1,6 +1,5 @@
 using CoffeeTunes.Contracts.Bars;
 using CoffeeTunes.Contracts.Beans;
-using CoffeeTunes.Contracts.BrewCycles;
 using CoffeeTunes.Contracts.Franchise;
 using CoffeeTunes.Contracts.Ingredients;
 using RestEase;
@@ -39,6 +38,9 @@ public interface ICoffeeTunesApi
     // Ingredient endpoints
     [Get("v1/{franchiseId}/bars/{barId}/ingredients")]
     Task<List<IngredientContract>> GetIngredients([Path] Guid franchiseId, [Path] Guid barId);
+    
+    [Get("v1/{franchiseId}/bars/{barId}/ingredients/unused-count")]
+    Task<int> GetUnusedIngredientCount([Path] Guid franchiseId, [Path] Guid barId);
 
     [Post("v1/{franchiseId}/bars/{barId}/ingredients")]
     Task AddIngredient([Path] Guid franchiseId, [Path] Guid barId, [Body] AddIngredientContract contract);

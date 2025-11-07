@@ -19,7 +19,8 @@ public static class IngredientEndpoints
         endpoints
             .RegisterGetIngredients()
             .RegisterAddIngredient()
-            .RegisterRemoveIngredient();
+            .RegisterRemoveIngredient()
+            .RegisterGetUnusedIngredientCount();
     }
 
     private static IEndpointRouteBuilder RegisterGetIngredients(this IEndpointRouteBuilder builder)
@@ -192,5 +193,30 @@ public static class IngredientEndpoints
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Results.NoContent();
+    }
+
+    private static IEndpointRouteBuilder RegisterGetUnusedIngredientCount(this IEndpointRouteBuilder builder)
+    {
+        builder.MapGet($"/{_routeBase}/unused-count", GetUnusedIngredientCount)
+            .WithName(nameof(GetUnusedIngredientCount))
+            .RequireAuthorization("User");
+
+        return builder;
+    }
+    
+    private static async Task<IResult> GetUnusedIngredientCount(
+        [FromRoute] Guid franchiseId,
+        [FromRoute] Guid barId,
+        [FromServices] CoffeeTunesDbContext dbContext,
+        [FromServices] FranchiseAccessService franchiseAccessService,
+        CancellationToken cancellationToken)
+    {
+        await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
+        
+        var count = await dbContext.Ingredients.AsNoTracking()
+            .Where(i => i.BarId == barId && !i.Used && !i.Selected)
+            .CountAsync(cancellationToken);
+
+        return Results.Ok(count);
     }
 }
