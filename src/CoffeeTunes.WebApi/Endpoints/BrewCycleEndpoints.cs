@@ -50,11 +50,10 @@ public static class BrewCycleEndpoints
         
         bar.IsOpen = true;
         
-        var barContract = await barService.GetBarContractAsync(barId, franchiseId, cancellationToken);
-        
         var brewCycle = await brewCycleService.StartNewCycleAsync(barId, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
         
+        var barContract = await barService.GetBarContractAsync(barId, franchiseId, cancellationToken);
         await hubContext.Clients
             .Group(BarHub.GetGroupName(franchiseId, barId))
             .BarUpdated(barContract);

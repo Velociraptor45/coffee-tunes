@@ -18,10 +18,9 @@ public class BeansService(CoffeeTunesDbContext dbContext, FranchiseAccessService
         }
     }
 
-    private async Task<List<HipstersSubmittedIngredient>> GetIngredientOwnersAsync(Guid ingredientId, CancellationToken ct)
+    private async Task<List<HipstersSubmittedIngredient>> GetIngredientOwnersAsync(Guid ingredientId, Guid hipsterId,
+        CancellationToken ct)
     {
-        var (hipsterId, _) = accessService.GetHipsterInfoFromToken()
-            ?? throw new InvalidOperationException("Hipster information could not be retrieved from the access token.");
         return await dbContext.HipstersSubmittedIngredients.AsNoTracking()
             .Where(b => b.IngredientId == ingredientId && b.HipsterId != hipsterId)
             .ToListAsync(ct);
@@ -38,7 +37,7 @@ public class BeansService(CoffeeTunesDbContext dbContext, FranchiseAccessService
         if (alreadyCastBeans)
             throw new InvalidOperationException("You've already cast beans for this ingredient.");
         
-        var owners = await GetIngredientOwnersAsync(contract.IngredientId, ct);
+        var owners = await GetIngredientOwnersAsync(contract.IngredientId, hipsterId, ct);
         
         if(contract.Beans.Count > owners.Count)
             throw new InvalidOperationException("You're not allowed to cast more beans than there are ingredient owners.");
