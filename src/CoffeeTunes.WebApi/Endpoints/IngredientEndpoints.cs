@@ -126,6 +126,7 @@ public static class IngredientEndpoints
                 VideoId = videoId,
                 Used = false,
                 Selected = false,
+                Revealed = false,
                 BarId = bar.Id,
                 Owners = []
             };

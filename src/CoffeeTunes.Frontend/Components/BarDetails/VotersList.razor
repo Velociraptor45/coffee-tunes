@@ -1,3 +1,4 @@
+@using CoffeeTunes.Contracts
 @using CoffeeTunes.Contracts.Bars
 
 <div class="voters-list">
@@ -26,6 +27,27 @@
                 </div>
             }
         </div>
+        
+        <button 
+            class="reveal-button" 
+            @onclick="RevealResults"
+            disabled="@(isRevealing || IsRevealed)">
+            @if (isRevealing)
+            {
+                <span class="button-spinner">⏳</span>
+                <span>Revealing...</span>
+            }
+            else if (IsRevealed)
+            {
+                <span>🔒</span>
+                <span>Revealed</span>
+            }
+            else
+            {
+                <span>☕</span>
+                <span>Reveal Results</span>
+            }
+        </button>
     }
     else
     {
@@ -41,4 +63,35 @@
     
     [Parameter]
     public HashSet<Guid> VotedHipsterIds { get; set; } = new();
+    
+    [Parameter]
+    public required Guid FranchiseId { get; set; }
+    
+    [Parameter]
+    public required Guid BarId { get; set; }
+    
+    [Parameter]
+    public bool IsRevealed { get; set; }
+    
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+    
+    private bool isRevealing = false;
+    
+    private async Task RevealResults()
+    {
+        isRevealing = true;
+        try
+        {
+            await Api.RevealIngredientResults(FranchiseId, BarId);
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error revealing results: {ex.Message}");
+        }
+        finally
+        {
+            isRevealing = false;
+        }
+    }
 }

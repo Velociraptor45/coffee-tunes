@@ -48,7 +48,8 @@
                             JoinedHipsters="@joinedHipsters"
                             VotedHipsterIds="@votedHipsterIds"
                             CurrentUserId="@currentUserId"
-                            OnBrewCycleStarted="@HandleBrewCycleStarted" />
+                            OnBrewCycleStarted="@HandleBrewCycleStarted"
+                            RevealResults="@revealResults" />
                     }
                     else if (activeView == ViewSwitcher.ViewIngredients)
                     {
@@ -96,6 +97,7 @@
     private BarContract? bar;
     private List<IngredientContract> ingredients = new();
     private BrewCycleContract? currentBrewCycle;
+    private BrewCycleRevealContract? revealResults;
     private bool isLoading = true;
     private bool isLoadingIngredients = false;
     private string? errorMessage;
@@ -120,6 +122,7 @@
         HubService.OnBeanCast += HandleBeanCast;
         HubService.OnHipsterJoined += HandleHipsterJoined;
         HubService.OnHipsterLeft += HandleHipsterLeft;
+        HubService.OnBrewCycleRevealed += HandleBrewCycleRevealed;
         
         await LoadBarData();
         
@@ -265,6 +268,7 @@
     {
         currentBrewCycle = brewCycle;
         ResetVotingState();
+        revealResults = null; // Clear reveal results when a new brew cycle starts
         StateHasChanged();
         return Task.CompletedTask;
     }
@@ -294,6 +298,13 @@
         {
             StateHasChanged();
         }
+        return Task.CompletedTask;
+    }
+    
+    private Task HandleBrewCycleRevealed(BrewCycleRevealContract revealContract)
+    {
+        revealResults = revealContract;
+        StateHasChanged();
         return Task.CompletedTask;
     }
     
@@ -345,6 +356,7 @@
         HubService.OnBeanCast -= HandleBeanCast;
         HubService.OnHipsterJoined -= HandleHipsterJoined;
         HubService.OnHipsterLeft -= HandleHipsterLeft;
+        HubService.OnBrewCycleRevealed -= HandleBrewCycleRevealed;
         
         // Leave the bar
         try

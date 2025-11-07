@@ -18,6 +18,7 @@ public class Ingredient
 
     public required bool Selected { get; set; }
     public required bool Used { get; set; }
+    public required bool Revealed { get; set; }
 
     [InverseProperty(nameof(Bean.Ingredient))]
     public ICollection<Bean> Beans { get; set; } = [];

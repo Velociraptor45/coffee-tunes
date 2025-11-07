@@ -94,7 +94,6 @@ public class BrewCycleService(CoffeeTunesDbContext dbContext, BarService barServ
             throw new InvalidOperationException("Cannot reveal ingredient while the bar is closed.");
 
         var ingredient = await dbContext.Ingredients
-            .AsNoTracking()
             .Include(i => i.Beans)
             .ThenInclude(b => b.CastFrom)
             .Include(i => i.Beans)
@@ -104,42 +103,11 @@ public class BrewCycleService(CoffeeTunesDbContext dbContext, BarService barServ
             .Where(i => i.BarId == barId && i.Selected && !i.Used)
             .SingleAsync(ct);
 
-        var ownerHash = ingredient.Owners.Select(o => o.HipsterId).ToHashSet();
+        var contract = ingredient.ToBrewCycleRevealContract();
 
-        var contract = new BrewCycleRevealContract
-        {
-            IngredientId = ingredient.Id,
-            Owners = ingredient.Owners
-                .Select(o => new BrewCycleHipsterContract
-                {
-                    HipsterId = o.HipsterId,
-                    Name = o.Hipster!.Name
-                })
-                .ToList(),
-            Results = ingredient.Beans
-                .GroupBy(b => b.CastFromId)
-                .Select(bg => new BrewCycleBeanResultContract
-                {
-                    Hipster = new BrewCycleHipsterContract
-                    {
-                        HipsterId = bg.First().CastFromId,
-                        Name = bg.First().CastFrom!.Name
-                    },
-                    Beans = bg
-                        .Select(b => new BrewCycleCastBeanContract
-                        {
-                            HipsterCastFor = new BrewCycleHipsterContract
-                            {
-                                HipsterId = b.CastToId,
-                                Name = b.CastTo!.Name
-                            },
-                            WasCorrect = ownerHash.Contains(b.CastToId)
-                        })
-                        .ToList()
-                })
-                .ToList()
-        };
-
+        ingredient.Revealed = true;
+        await dbContext.SaveChangesAsync(ct);
+        
         return contract;
     }
 }

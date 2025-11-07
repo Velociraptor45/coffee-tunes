@@ -13,7 +13,7 @@ public interface ICoffeeTunesApi
     [Put("v1/{franchiseId}/bars/{barId}/open")]
     Task StartBrewCycle([Path] Guid franchiseId, [Path] Guid barId);
 
-    [Get("v1/{franchiseId}/bars/{barId}/reveal")]
+    [Put("v1/{franchiseId}/bars/{barId}/reveal")]
     Task RevealIngredientResults([Path] Guid franchiseId, [Path] Guid barId);
 
     [Put("v1/{franchiseId}/bars/{barId}/close")]

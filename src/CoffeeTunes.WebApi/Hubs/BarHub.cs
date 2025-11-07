@@ -65,7 +65,12 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
         // show ingredient
         var ingredient = await dbContext.Ingredients
             .AsNoTracking()
+            .Include(i => i.Beans)
+            .ThenInclude(b => b.CastFrom)
+            .Include(i => i.Beans)
+            .ThenInclude(b => b.CastTo)
             .Include(i => i.Owners)
+            .ThenInclude(o => o.Hipster)
             .Where(i => i.BarId == barId && !i.Used && i.Selected)
             .FirstOrDefaultAsync();
 
@@ -75,19 +80,26 @@ public class BarHub(CoffeeTunesDbContext dbContext, FranchiseAccessService acces
         var brewCycleContract = ingredient.ToBrewCycleContract();
         await Clients.Caller.BrewCycleUpdated(brewCycleContract);
         
-        // check if hipster already cast beans
-        var alreadyCastBeans = await dbContext.HipstersCastIngredientBeans
+        // send all hipsters who already cast beans
+        var hipstersCastIngredientBeans = await dbContext.HipstersCastIngredientBeans
             .AsNoTracking()
-            .Where(b => b.IngredientId == ingredient.Id && b.HipsterId == hipsterId)
-            .AnyAsync();
+            .Where(b => b.IngredientId == ingredient.Id)
+            .ToListAsync();
         
-        if (alreadyCastBeans)
+        foreach (var hipstersCastIngredientBean in hipstersCastIngredientBeans)
+        {
             await Clients.All.BeanCast(new BeanCastContract
             {
-                HipsterId = hipsterId
+                HipsterId = hipstersCastIngredientBean.HipsterId
             });
+        }
         
         // reveal ingredient solution
+        if (ingredient.Revealed)
+        {
+            var revealContract = ingredient.ToBrewCycleRevealContract();
+            await Clients.Caller.RevealBrewCycle(revealContract);
+        }
     } 
     
     public async Task LeaveBar(Guid barId)
