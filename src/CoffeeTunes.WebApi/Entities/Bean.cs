@@ -18,9 +18,9 @@ public class Bean
     [ForeignKey(nameof(IngredientId))]
     public Ingredient? Ingredient { get; set; }
 
-    [ForeignKey(nameof(CastToId))]
+    [ForeignKey(nameof(CastFromId))]
     public Hipster? CastFrom { get; set; }
     
-    [ForeignKey(nameof(CastFromId))]
+    [ForeignKey(nameof(CastToId))]
     public Hipster? CastTo { get; set; }
 }

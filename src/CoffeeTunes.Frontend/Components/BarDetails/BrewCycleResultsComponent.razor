@@ -1,10 +1,18 @@
+@using System.Globalization
 @using CoffeeTunes.Contracts.BrewCycles
+@using CoffeeTunes.Contracts
+@using CoffeeTunes.Contracts.Bars
 
 <div class="results-display">
     <h3 class="results-title">☕ Brewing Results</h3>
     
+    <div class="video-name-section">
+        <h4 class="video-name-title">🎵 Video:</h4>
+        <p class="video-name">@VideoName</p>
+    </div>
+    
     <div class="owners-section">
-        <h4 class="section-title">🎵 Submitted by:</h4>
+        <h4 class="section-title">👤 Submitted by:</h4>
         <div class="owners-list">
             @foreach (var owner in Results.Owners)
             {
@@ -55,22 +63,147 @@
             }
         </div>
     </div>
+    
+    <div class="brew-cycle-actions">
+        @if (!isLoadingCount)
+        {
+            @if (unusedIngredientsCount > 0)
+            {
+                <button 
+                    class="next-ingredient-button" 
+                    @onclick="HandleNextIngredient"
+                    disabled="@isProcessing">
+                    @if (isProcessing && processingAction == "next")
+                    {
+                        <span class="button-spinner">⏳</span>
+                        <span>Loading...</span>
+                    }
+                    else
+                    {
+                        <span class="button-icon">➡️</span>
+                        <span>Next Ingredient</span>
+                    }
+                </button>
+            }
+            
+            <button 
+                class="end-brew-cycle-button" 
+                @onclick="HandleEndBrewCycle"
+                disabled="@isProcessing">
+                @if (isProcessing && processingAction == "end")
+                {
+                    <span class="button-spinner">⏳</span>
+                    <span>Ending...</span>
+                }
+                else
+                {
+                    <span class="button-icon">🏁</span>
+                    <span>End Brew Cycle</span>
+                }
+            </button>
+        }
+        else
+        {
+            <div class="loading-actions">
+                <span class="button-spinner">⏳</span>
+                <span>Loading...</span>
+            </div>
+        }
+    </div>
 </div>
 
 @code {
     [Parameter]
     public required BrewCycleRevealContract Results { get; set; }
     
+    [Parameter]
+    public required string VideoName { get; set; }
+    
+    [Parameter]
+    public required Guid FranchiseId { get; set; }
+    
+    [Parameter]
+    public required Guid BarId { get; set; }
+    
+    [Parameter]
+    public required BarContract Bar { get; set; }
+    
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+    
     private HashSet<Guid> ownerIds = new();
     private int maxVotes = 0;
+    private bool isProcessing = false;
+    private string processingAction = "";
+    private int unusedIngredientsCount = 0;
+    private bool isLoadingCount = true;
     
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         ownerIds = Results.Owners.Select(o => o.HipsterId).ToHashSet();
         
         // Calculate max votes for bar chart scaling
         var voteCounts = GetBarChartData().Select(b => b.VoteCount).ToList();
         maxVotes = voteCounts.Any() ? voteCounts.Max() : 1;
+        
+        // Load unused ingredients count
+        await LoadUnusedIngredientsCount();
+    }
+    
+    private async Task LoadUnusedIngredientsCount()
+    {
+        isLoadingCount = true;
+        try
+        {
+            unusedIngredientsCount = await Api.GetUnusedIngredientCount(FranchiseId, BarId);
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error loading unused ingredients count: {ex.Message}");
+            unusedIngredientsCount = 0;
+        }
+        finally
+        {
+            isLoadingCount = false;
+        }
+    }
+    
+    private async Task HandleNextIngredient()
+    {
+        isProcessing = true;
+        processingAction = "next";
+        try
+        {
+            await Api.NextIngredient(FranchiseId, BarId);
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error advancing to next ingredient: {ex.Message}");
+        }
+        finally
+        {
+            isProcessing = false;
+            processingAction = "";
+        }
+    }
+    
+    private async Task HandleEndBrewCycle()
+    {
+        isProcessing = true;
+        processingAction = "end";
+        try
+        {
+            await Api.EndBrewCycle(FranchiseId, BarId);
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error ending brew cycle: {ex.Message}");
+        }
+        finally
+        {
+            isProcessing = false;
+            processingAction = "";
+        }
     }
     
     private class BarChartData
@@ -86,6 +219,16 @@
         // Group all votes by the hipster who received them
         var votesByRecipient = new Dictionary<Guid, List<string>>();
         var hipsterNames = new Dictionary<Guid, string>();
+        
+        // First, ensure all owners are in the results with 0 votes
+        foreach (var owner in Results.Owners)
+        {
+            if (!votesByRecipient.ContainsKey(owner.HipsterId))
+            {
+                votesByRecipient[owner.HipsterId] = new List<string>();
+            }
+            hipsterNames[owner.HipsterId] = owner.Name;
+        }
         
         // Process all beans to see who voted for whom
         foreach (var result in Results.Results)
@@ -104,14 +247,13 @@
             }
         }
         
-        // Also include hipsters who received no votes
-        foreach (var result in Results.Results)
+        // Include all contributing hipsters from the bar, even if they received no votes
+        foreach (var hipster in Bar.ContributingHipsters)
         {
-            var hipsterId = result.Hipster.HipsterId;
-            if (!votesByRecipient.ContainsKey(hipsterId))
+            if (!votesByRecipient.ContainsKey(hipster.Id))
             {
-                votesByRecipient[hipsterId] = new List<string>();
-                hipsterNames[hipsterId] = result.Hipster.Name;
+                votesByRecipient[hipster.Id] = new List<string>();
+                hipsterNames[hipster.Id] = hipster.Name;
             }
         }
         
@@ -132,6 +274,6 @@
     private string GetBarWidth(int voteCount)
     {
         if (maxVotes == 0) return "0";
-        return ((voteCount * 100.0) / maxVotes).ToString("F1");
+        return ((voteCount * 100.0) / maxVotes).ToString("F1", CultureInfo.InvariantCulture);
     }
 }

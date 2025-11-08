@@ -42,7 +42,7 @@ else
         <div class="ingredients-grid">
             @foreach (var ingredient in Ingredients)
             {
-                <div class="ingredient-card @(ingredient.Used ? "used" : "")">
+                <div class="ingredient-card @((ingredient.Used || ingredient.Selected) ? "used" : "")">
                     <div class="ingredient-thumbnail">
                         <img src="@ingredient.ThumbnailUrl" alt="@ingredient.Name" />
                     </div>
@@ -52,7 +52,7 @@ else
                             Watch on YouTube
                         </a>
                     </div>
-                    @if (ingredient.Used)
+                    @if (ingredient.Used || ingredient.Selected)
                     {
                         <div class="ingredient-badge">✓ USED</div>
                     }
@@ -128,7 +128,7 @@ else
 
     private async Task RemoveIngredient(IngredientContract ingredient)
     {
-        if (ingredient.Used)
+        if (ingredient.Used || ingredient.Selected)
         {
             return; // Safety check - should not happen as button is hidden
         }

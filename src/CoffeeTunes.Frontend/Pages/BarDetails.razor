@@ -1,5 +1,4 @@
 @page "/franchise/{franchiseId:guid}/bar/{barId:guid}"
-@using Microsoft.AspNetCore.Components.Authorization
 @using CoffeeTunes.Contracts
 @using CoffeeTunes.Contracts.Bars
 @using CoffeeTunes.Contracts.Beans
@@ -259,18 +258,27 @@
         if (updatedBar.Id == BarId)
         {
             bar = updatedBar;
+            
+            // When the bar is closed (brew cycle ended), clear the current brew cycle
+            if (!updatedBar.IsOpen && currentBrewCycle != null)
+            {
+                currentBrewCycle = null;
+                revealResults = null;
+                ResetVotingState();
+            }
+            
             StateHasChanged();
         }
         return Task.CompletedTask;
     }
     
-    private Task HandleBrewCycleUpdated(BrewCycleContract brewCycle)
+    private async Task HandleBrewCycleUpdated(BrewCycleContract brewCycle)
     {
         currentBrewCycle = brewCycle;
         ResetVotingState();
         revealResults = null; // Clear reveal results when a new brew cycle starts
         StateHasChanged();
-        return Task.CompletedTask;
+        await LoadIngredients();
     }
     
     private Task HandleBeanCast(BeanCastContract beanCast)

@@ -98,6 +98,7 @@
     private bool isCasting = false;
     private bool isSubmitted = false;
     private Guid? currentUserId;
+    private Guid? currentIngredientId;
     
     protected override async Task OnInitializedAsync()
     {
@@ -107,10 +108,20 @@
     
     protected override void OnParametersSet()
     {
-        CalculateVotingData();
+        // Check if ingredient has changed
+        var newIngredientId = BrewCycle.Ingredient.Id;
+        var ingredientChanged = currentIngredientId != newIngredientId;
+        currentIngredientId = newIngredientId;
         
+        CalculateVotingData(ingredientChanged);
+        
+        // Reset isSubmitted when new ingredient arrives (HasCurrentUserVoted will be false)
+        if (!HasCurrentUserVoted)
+        {
+            isSubmitted = false;
+        }
         // Set isSubmitted based on external parameter (from BeanCast SignalR events)
-        if (HasCurrentUserVoted && !isSubmitted)
+        else if (HasCurrentUserVoted && !isSubmitted)
         {
             isSubmitted = true;
         }
@@ -134,19 +145,21 @@
         }
     }
     
-    private void CalculateVotingData()
+    private void CalculateVotingData(bool ingredientChanged = false)
     {
         if (!currentUserId.HasValue)
             return;
         
-        // Filter out the current user from selectable hipsters
+        // Get the IDs of hipsters who submitted the current ingredient
+        var ownerIds = BrewCycle.Ingredient.OwnerHipsterIds.ToHashSet();
+        
+        // Filter to show only hipsters who submitted this ingredient (excluding the current user)
         selectableHipsters = Bar.ContributingHipsters
             .Where(h => h.Id != currentUserId.Value)
             .ToList();
         
         // Calculate available beans
         // Number of beans = number of owners of the current ingredient
-        var ownerIds = BrewCycle.Ingredient.OwnerHipsterIds.ToHashSet();
         var ownerCount = ownerIds.Count;
         
         // If current user is one of the owners, they have one less bean
@@ -159,9 +172,11 @@
             availableBeans = ownerCount;
         }
         
-        // Reset selection state only if not already submitted
-        selectedHipsters.Clear();
-        // Don't reset isSubmitted - once beans are cast, keep the success message visible
+        // Only reset selection when the ingredient has changed
+        if (ingredientChanged)
+        {
+            selectedHipsters.Clear();
+        }
     }
     
     private void ToggleHipster(Guid hipsterId)
