@@ -98,6 +98,7 @@
     private bool isCasting = false;
     private bool isSubmitted = false;
     private Guid? currentUserId;
+    private Guid? currentIngredientId;
     
     protected override async Task OnInitializedAsync()
     {
@@ -107,7 +108,12 @@
     
     protected override void OnParametersSet()
     {
-        CalculateVotingData();
+        // Check if ingredient has changed
+        var newIngredientId = BrewCycle.Ingredient.Id;
+        var ingredientChanged = currentIngredientId != newIngredientId;
+        currentIngredientId = newIngredientId;
+        
+        CalculateVotingData(ingredientChanged);
         
         // Reset isSubmitted when new ingredient arrives (HasCurrentUserVoted will be false)
         if (!HasCurrentUserVoted)
@@ -139,7 +145,7 @@
         }
     }
     
-    private void CalculateVotingData()
+    private void CalculateVotingData(bool ingredientChanged = false)
     {
         if (!currentUserId.HasValue)
             return;
@@ -166,9 +172,11 @@
             availableBeans = ownerCount;
         }
         
-        // Reset selection state only if not already submitted
-        selectedHipsters.Clear();
-        // Don't reset isSubmitted - once beans are cast, keep the success message visible
+        // Only reset selection when the ingredient has changed
+        if (ingredientChanged)
+        {
+            selectedHipsters.Clear();
+        }
     }
     
     private void ToggleHipster(Guid hipsterId)
