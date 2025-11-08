@@ -149,7 +149,7 @@
         
         // Filter to show only hipsters who submitted this ingredient (excluding the current user)
         selectableHipsters = Bar.ContributingHipsters
-            .Where(h => ownerIds.Contains(h.Id) && h.Id != currentUserId.Value)
+            .Where(h => h.Id != currentUserId.Value)
             .ToList();
         
         // Calculate available beans
