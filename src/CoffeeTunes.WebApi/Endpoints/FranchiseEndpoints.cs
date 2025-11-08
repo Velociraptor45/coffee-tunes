@@ -59,11 +59,13 @@ public static class FranchiseEndpoints
             };
             dbContext.Hipsters.Add(newHipster);
         }
-        
+
+        var franchiseId = Guid.CreateVersion7();
         var franchise = new Franchise
         {
-            Id = Guid.CreateVersion7(),
-            Name = trimmedName
+            Id = franchiseId,
+            Name = trimmedName,
+            Code = FranchiseCodeService.Generate(franchiseId)
         };
         dbContext.Franchises.Add(franchise);
         
@@ -158,7 +160,7 @@ public static class FranchiseEndpoints
         
         var franchise = await dbContext.Franchises
             .Include(c => c.HipstersInFranchises)
-            .FirstOrDefaultAsync(c => c.Name == contract.Name, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Code == contract.Code, cancellationToken);
         
         if (franchise is null)
             return Results.NotFound("Franchise not found");

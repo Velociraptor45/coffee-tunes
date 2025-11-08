@@ -12,6 +12,7 @@ public class Franchise
     public required Guid Id { get; set; }
 
     public required string Name { get; set; }
+    public required string Code { get; set; }
 
     [InverseProperty(nameof(HipstersInFranchise.Franchise))]
     public ICollection<HipstersInFranchise>? HipstersInFranchises { get; set; }

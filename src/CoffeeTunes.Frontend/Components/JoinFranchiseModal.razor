@@ -25,8 +25,8 @@
                         id="franchise-name"
                         type="text" 
                         class="form-input" 
-                        @bind="franchiseName" 
-                        placeholder="Enter the franchise name to join..."
+                        @bind="franchiseCode" 
+                        placeholder="Enter the franchise code to join..."
                         maxlength="100"
                         disabled="@isSubmitting"
                         required />
@@ -36,7 +36,7 @@
                     <button type="button" class="btn-cancel" @onclick="Close" disabled="@isSubmitting">
                         Cancel
                     </button>
-                    <button type="submit" class="btn-join" disabled="@(isSubmitting || string.IsNullOrWhiteSpace(franchiseName))">
+                    <button type="submit" class="btn-join" disabled="@(isSubmitting || string.IsNullOrWhiteSpace(franchiseCode))">
                         @if (isSubmitting)
                         {
                             <span class="spinner">☕</span>
@@ -66,13 +66,13 @@
     [Inject]
     public ICoffeeTunesApi Api { get; set; } = default!;
 
-    private string franchiseName = string.Empty;
+    private string franchiseCode = string.Empty;
     private bool isSubmitting = false;
     private string? errorMessage;
 
     private async Task HandleSubmit()
     {
-        if (string.IsNullOrWhiteSpace(franchiseName))
+        if (string.IsNullOrWhiteSpace(franchiseCode))
         {
             return;
         }
@@ -84,12 +84,12 @@
         {
             var contract = new JoinFranchiseContract
             {
-                Name = franchiseName.Trim()
+                Code = franchiseCode.Trim()
             };
 
             await Api.JoinFranchise(contract);
             
-            await OnFranchiseJoined.InvokeAsync(franchiseName);
+            await OnFranchiseJoined.InvokeAsync(franchiseCode);
             ResetForm();
             await OnClose.InvokeAsync();
         }
@@ -128,7 +128,7 @@
 
     private void ResetForm()
     {
-        franchiseName = string.Empty;
+        franchiseCode = string.Empty;
         errorMessage = null;
         isSubmitting = false;
     }
