@@ -1,5 +1,4 @@
 @page "/franchise/{franchiseId:guid}/bar/{barId:guid}"
-@using Microsoft.AspNetCore.Components.Authorization
 @using CoffeeTunes.Contracts
 @using CoffeeTunes.Contracts.Bars
 @using CoffeeTunes.Contracts.Beans
@@ -49,8 +48,7 @@
                             VotedHipsterIds="@votedHipsterIds"
                             CurrentUserId="@currentUserId"
                             OnBrewCycleStarted="@HandleBrewCycleStarted"
-                            RevealResults="@revealResults"
-                            OnIngredientsChanged="@HandleIngredientsChanged" />
+                            RevealResults="@revealResults" />
                     }
                     else if (activeView == ViewSwitcher.ViewIngredients)
                     {
@@ -274,13 +272,13 @@
         return Task.CompletedTask;
     }
     
-    private Task HandleBrewCycleUpdated(BrewCycleContract brewCycle)
+    private async Task HandleBrewCycleUpdated(BrewCycleContract brewCycle)
     {
         currentBrewCycle = brewCycle;
         ResetVotingState();
         revealResults = null; // Clear reveal results when a new brew cycle starts
         StateHasChanged();
-        return Task.CompletedTask;
+        await LoadIngredients();
     }
     
     private Task HandleBeanCast(BeanCastContract beanCast)
@@ -338,15 +336,6 @@
     {
         // This will be handled by SignalR updates
         return Task.CompletedTask;
-    }
-    
-    private async Task HandleIngredientsChanged()
-    {
-        // Reload ingredients if we're on the ingredients view
-        if (activeView == ViewSwitcher.ViewIngredients)
-        {
-            await LoadIngredients();
-        }
     }
     
     private async Task LoadCurrentUserInfo()

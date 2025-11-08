@@ -127,9 +127,6 @@
     [Parameter]
     public required BarContract Bar { get; set; }
     
-    [Parameter]
-    public EventCallback OnIngredientsChanged { get; set; }
-    
     [Inject]
     public ICoffeeTunesApi Api { get; set; } = default!;
     
@@ -177,8 +174,6 @@
         try
         {
             await Api.NextIngredient(FranchiseId, BarId);
-            // Trigger ingredients reload
-            await OnIngredientsChanged.InvokeAsync();
         }
         catch (Exception ex)
         {
@@ -198,8 +193,6 @@
         try
         {
             await Api.EndBrewCycle(FranchiseId, BarId);
-            // Trigger ingredients reload
-            await OnIngredientsChanged.InvokeAsync();
         }
         catch (Exception ex)
         {
