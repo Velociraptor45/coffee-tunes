@@ -103,6 +103,7 @@ public static class FranchiseEndpoints
             {
                 Id = c.Id,
                 Name = c.Name,
+                Code = c.Code,
                 HipstersInFranchise = c.HipstersInFranchises!
                     .Select(hic => hic.Hipster!.Name)
             })
