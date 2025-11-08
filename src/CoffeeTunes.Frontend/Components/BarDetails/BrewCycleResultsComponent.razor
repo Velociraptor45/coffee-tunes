@@ -1,3 +1,4 @@
+@using System.Globalization
 @using CoffeeTunes.Contracts.BrewCycles
 @using CoffeeTunes.Contracts
 @using CoffeeTunes.Contracts.Bars
@@ -273,6 +274,6 @@
     private string GetBarWidth(int voteCount)
     {
         if (maxVotes == 0) return "0";
-        return ((voteCount * 100.0) / maxVotes).ToString("F1");
+        return ((voteCount * 100.0) / maxVotes).ToString("F1", CultureInfo.InvariantCulture);
     }
 }
