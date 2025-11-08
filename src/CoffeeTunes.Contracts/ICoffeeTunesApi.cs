@@ -32,6 +32,9 @@ public interface ICoffeeTunesApi
     [Get("v1/{franchiseId}/bars/{id}")]
     Task<BarContract> GetBar([Path] Guid franchiseId, [Path] Guid id);
 
+    [Get("v1/{franchiseId}/bars/{id}/stats")]
+    Task<BarContract> GetBarStats([Path] Guid franchiseId, [Path] Guid id);
+
     [Get("v1/{franchiseId}/bars/all")]
     Task<List<BarOverviewContract>> GetAllBars([Path] Guid franchiseId);
 

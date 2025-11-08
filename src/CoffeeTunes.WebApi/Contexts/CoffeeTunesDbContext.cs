@@ -17,6 +17,7 @@ public class CoffeeTunesDbContext : DbContext
     public DbSet<HipstersSubmittedIngredient> HipstersSubmittedIngredients { get; set; }
     public DbSet<Bean> Beans { get; set; }
     public DbSet<HipstersCastIngredientBean> HipstersCastIngredientBeans { get; set; }
+    public DbSet<BarStatistics> BarStatistics { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

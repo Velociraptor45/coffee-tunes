@@ -15,5 +15,5 @@ public class Franchise
     public required string Code { get; set; }
 
     [InverseProperty(nameof(HipstersInFranchise.Franchise))]
-    public ICollection<HipstersInFranchise>? HipstersInFranchises { get; set; }
+    public ICollection<HipstersInFranchise> HipstersInFranchises { get; set; } = [];
 }

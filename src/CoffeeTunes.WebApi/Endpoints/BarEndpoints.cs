@@ -18,7 +18,8 @@ public static class BarEndpoints
         endpoints
             .RegisterCreateBar()
             .RegisterGetBar()
-            .RegisterGetAllBars();
+            .RegisterGetAllBars()
+            .RegisterGetBarStats();
     }
 
     private static IEndpointRouteBuilder RegisterCreateBar(this IEndpointRouteBuilder builder)
@@ -115,5 +116,28 @@ public static class BarEndpoints
         var barContract = await barService.GetBarContractAsync(id, franchiseId, cancellationToken);
         
         return Results.Ok(barContract);
+    }
+
+    private static IEndpointRouteBuilder RegisterGetBarStats(this IEndpointRouteBuilder builder)
+    {
+        builder.MapGet($"/{_routeBase}/{{id:guid}}/stats", GetBarStats)
+            .WithName(nameof(GetBarStats))
+            .RequireAuthorization("User");
+
+        return builder;
+    }
+    
+    private static async Task<IResult> GetBarStats(
+        [FromRoute] Guid franchiseId,
+        [FromRoute] Guid id,
+        [FromServices] FranchiseAccessService franchiseAccessService,
+        [FromServices] BarStatisticsService barStatisticsService,
+        CancellationToken cancellationToken)
+    {
+        await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
+        
+        var statisticsContract = await barStatisticsService.GetBarStatisticsAsync(id, franchiseId, cancellationToken);
+        
+        return Results.Ok(statisticsContract);
     }
 }

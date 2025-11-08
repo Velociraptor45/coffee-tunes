@@ -7,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CoffeeTunes.WebApi.Services;
 
-public class BrewCycleService(CoffeeTunesDbContext dbContext, BarService barService)
+public class BrewCycleService(CoffeeTunesDbContext dbContext, BarService barService,
+    BarStatisticsService barStatisticsService)
 {
     private static readonly Random Random = new();
 
@@ -84,9 +85,12 @@ public class BrewCycleService(CoffeeTunesDbContext dbContext, BarService barServ
         var remainingIngredientCount = await dbContext.Ingredients.AsNoTracking()
             .Where(i => i.BarId == barId && !i.Used && !i.Selected)
             .CountAsync(ct);
-        
+
         if (remainingIngredientCount == 0)
+        {
+            await barStatisticsService.CreateFinalBarStatisticsAsync(barId, franchiseId, ct);
             bar.HasSupplyLeft = false;
+        }
         
         await dbContext.SaveChangesAsync(ct);
 
