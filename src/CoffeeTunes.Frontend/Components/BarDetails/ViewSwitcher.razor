@@ -1,3 +1,5 @@
+@using CoffeeTunes.Contracts.Bars
+
 <div class="view-switcher">
     <button class="view-tab @(ActiveView == ViewBrewing ? "active" : "")" @onclick="@(() => OnViewChange.InvokeAsync(ViewBrewing))">
         <span class="tab-icon">🔥</span>
@@ -11,16 +13,27 @@
         <span class="tab-icon">📊</span>
         <span>Stats</span>
     </button>
+    @if (!Bar.HasSupplyLeft)
+    {
+        <button class="view-tab @(ActiveView == ViewPlaylist ? "active" : "")" @onclick="@(() => OnViewChange.InvokeAsync(ViewPlaylist))">
+            <span class="tab-icon">🎵</span>
+            <span>Playlist</span>
+        </button>
+    }
 </div>
 
 @code {
     public const string ViewBrewing = "brewing";
     public const string ViewIngredients = "ingredients";
     public const string ViewStats = "stats";
+    public const string ViewPlaylist = "playlist";
 
     [Parameter]
     public required string ActiveView { get; set; }
 
     [Parameter]
     public required EventCallback<string> OnViewChange { get; set; }
+
+    [Parameter]
+    public required BarContract Bar { get; set; }
 }

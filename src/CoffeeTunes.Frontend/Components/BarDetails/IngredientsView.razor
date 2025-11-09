@@ -2,7 +2,7 @@
 @using CoffeeTunes.Contracts.Bars
 @using CoffeeTunes.Contracts.Ingredients
 
-@if (IsLoading)
+@if (IsLoading || isLoadingContributors)
 {
     <div class="loading-container">
         <div class="coffee-loader">☕</div>
@@ -74,6 +74,33 @@ else
             <p>You haven't submitted any ingredients to this bar yet.</p>
         </div>
     }
+
+    @if (contributors.Any())
+    {
+        <div class="contributors-section">
+            <h2 class="section-title">Who's Contributing</h2>
+            <div class="contributors-list">
+                @foreach (var contributor in contributors.OrderBy(c => c.HipsterName))
+                {
+                    <div class="contributor-item @(contributor.AlreadyContributed ? "contributed" : "not-contributed")">
+                        <span class="contributor-name">@contributor.HipsterName</span>
+                        <span class="contributor-status">
+                            @if (contributor.AlreadyContributed)
+                            {
+                                <span class="status-icon">✓</span>
+                                <span class="status-text">Contributed</span>
+                            }
+                            else
+                            {
+                                <span class="status-icon">⏳</span>
+                                <span class="status-text">Pending</span>
+                            }
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 }
 
 <AddIngredientModal
@@ -109,6 +136,32 @@ else
     public ICoffeeTunesApi Api { get; set; } = default!;
 
     private bool showAddModal = false;
+    private bool isLoadingContributors = false;
+    private List<IngredientContributorContract> contributors = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadContributors();
+    }
+
+    private async Task LoadContributors()
+    {
+        isLoadingContributors = true;
+
+        try
+        {
+            contributors = await Api.GetIngredientContributors(FranchiseId, Bar.Id);
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error loading contributors: {ex.Message}");
+            contributors = new();
+        }
+        finally
+        {
+            isLoadingContributors = false;
+        }
+    }
 
     private void OpenAddModal()
     {

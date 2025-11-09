@@ -1,0 +1,74 @@
+@using CoffeeTunes.Contracts
+@using CoffeeTunes.Contracts.Ingredients
+
+@if (IsLoading)
+{
+    <div class="loading-container">
+        <div class="coffee-loader">☕</div>
+        <p>Loading your playlist...</p>
+    </div>
+}
+else if (ErrorMessage != null)
+{
+    <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <h2>Failed to load playlist</h2>
+        <p>@ErrorMessage</p>
+        <button class="retry-button" @onclick="OnRetry">Try Again</button>
+    </div>
+}
+else
+{
+    @if (Playlist.Any())
+    {
+        <div class="playlist-header">
+            <div class="playlist-icon">🎵</div>
+            <h2>Complete Playlist</h2>
+            <p class="playlist-subtitle">All songs submitted to this bar</p>
+        </div>
+
+        <div class="playlist-grid">
+            @foreach (var entry in Playlist)
+            {
+                <div class="playlist-card">
+                    <div class="playlist-thumbnail">
+                        <img src="@entry.ThumbnailUrl" alt="@entry.Name" />
+                        <div class="play-overlay">
+                            <a href="@entry.Url" target="_blank" rel="noopener noreferrer" class="play-button">
+                                ▶️
+                            </a>
+                        </div>
+                    </div>
+                    <div class="playlist-info">
+                        <h3 class="playlist-song-name">@entry.Name</h3>
+                        <a href="@entry.Url" target="_blank" rel="noopener noreferrer" class="playlist-link">
+                            Watch on YouTube
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-view">
+            <div class="empty-icon">🎵</div>
+            <h2>No Songs in Playlist</h2>
+            <p>There are no songs in this bar's playlist yet.</p>
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public required List<IngredientPlaylistEntry> Playlist { get; set; }
+
+    [Parameter]
+    public required bool IsLoading { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter]
+    public EventCallback OnRetry { get; set; }
+}
