@@ -20,7 +20,9 @@ public static class IngredientEndpoints
             .RegisterGetIngredients()
             .RegisterAddIngredient()
             .RegisterRemoveIngredient()
-            .RegisterGetUnusedIngredientCount();
+            .RegisterGetUnusedIngredientCount()
+            .RegisterGetIngredientContributors()
+            .RegisterGetIngredientPlaylist();
     }
 
     private static IEndpointRouteBuilder RegisterGetIngredients(this IEndpointRouteBuilder builder)
@@ -218,5 +220,97 @@ public static class IngredientEndpoints
             .CountAsync(cancellationToken);
 
         return Results.Ok(count);
+    }
+
+    private static IEndpointRouteBuilder RegisterGetIngredientContributors(this IEndpointRouteBuilder builder)
+    {
+        builder.MapGet($"/{_routeBase}/contributors", GetIngredientContributors)
+            .WithName(nameof(GetIngredientContributors))
+            .RequireAuthorization("User");
+
+        return builder;
+    }
+    
+    private static async Task<IResult> GetIngredientContributors(
+        [FromRoute] Guid franchiseId,
+        [FromRoute] Guid barId,
+        [FromServices] CoffeeTunesDbContext dbContext,
+        [FromServices] FranchiseAccessService franchiseAccessService,
+        CancellationToken cancellationToken)
+    {
+        await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
+
+        var allHipsters = await dbContext.HipstersInFranchises
+            .Include(h => h.Hipster)
+            .AsNoTracking()
+            .Where(f => f.FranchiseId == franchiseId)
+            .ToListAsync(cancellationToken);
+        
+        var allBarIngredients = await dbContext.Ingredients
+            .Include(i => i.Owners)
+            .AsNoTracking()
+            .Where(i => i.BarId == barId)
+            .ToListAsync(cancellationToken);
+
+        var contracts = new List<IngredientContributorContract>();
+        foreach (var hipster in allHipsters)
+        {
+            var alreadyContributed = allBarIngredients
+                .Any(i => i.Owners.Any(o => o.HipsterId == hipster.HipsterId));
+
+            var contract = new IngredientContributorContract
+            {
+                HipsterId = hipster.HipsterId,
+                HipsterName = hipster.Hipster!.Name,
+                AlreadyContributed = alreadyContributed
+            };
+            contracts.Add(contract);
+        }
+        
+        return Results.Ok(contracts);
+    }
+
+    private static IEndpointRouteBuilder RegisterGetIngredientPlaylist(this IEndpointRouteBuilder builder)
+    {
+        builder.MapGet($"/{_routeBase}/playlist", GetIngredientPlaylist)
+            .WithName(nameof(GetIngredientPlaylist))
+            .RequireAuthorization("User");
+
+        return builder;
+    }
+    
+    private static async Task<IResult> GetIngredientPlaylist(
+        [FromRoute] Guid franchiseId,
+        [FromRoute] Guid barId,
+        [FromServices] CoffeeTunesDbContext dbContext,
+        [FromServices] FranchiseAccessService franchiseAccessService,
+        CancellationToken cancellationToken)
+    {
+        await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
+
+        var bar = await dbContext.Bars
+            .AsNoTracking()
+            .Where(b => b.Id == barId && b.FranchiseId == franchiseId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (bar is null)
+            return Results.NotFound("Bar not found in the specified franchise.");
+        
+        if(bar.HasSupplyLeft)
+            return Results.BadRequest("The ingredient playlist is only available for bars that have no supply left.");
+        
+        var allBarIngredients = await dbContext.Ingredients
+            .AsNoTracking()
+            .Where(i => i.BarId == barId)
+            .Select(i => new IngredientPlaylistEntry
+            {
+                Id = i.Id,
+                Name = i.Name,
+                Url = i.Url,
+                VideoId = i.VideoId,
+                ThumbnailUrl = i.ThumbnailUrl
+            })
+            .ToListAsync(cancellationToken);
+        
+        return Results.Ok(allBarIngredients);
     }
 }

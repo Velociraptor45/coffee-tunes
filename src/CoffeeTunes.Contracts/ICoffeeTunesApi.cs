@@ -48,6 +48,12 @@ public interface ICoffeeTunesApi
     [Get("v1/{franchiseId}/bars/{barId}/ingredients")]
     Task<List<IngredientContract>> GetIngredients([Path] Guid franchiseId, [Path] Guid barId);
     
+    [Get("v1/{franchiseId}/bars/{barId}/ingredients/contributors")]
+    Task<List<IngredientContributorContract>> GetIngredientContributors([Path] Guid franchiseId, [Path] Guid barId);
+    
+    [Get("v1/{franchiseId}/bars/{barId}/ingredients/playlist")]
+    Task<List<IngredientPlaylistEntry>> GetIngredientPlaylist([Path] Guid franchiseId, [Path] Guid barId);
+    
     [Get("v1/{franchiseId}/bars/{barId}/ingredients/unused-count")]
     Task<int> GetUnusedIngredientCount([Path] Guid franchiseId, [Path] Guid barId);
 
