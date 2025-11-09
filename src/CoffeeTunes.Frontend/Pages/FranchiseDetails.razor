@@ -39,11 +39,12 @@
                 <div class="franchise-code-section">
                     <button class="code-toggle" @onclick="ToggleFranchiseCode">
                         <span class="toggle-icon">@(showFranchiseCode ? "▼" : "▶")</span>
-                        <span class="code-label">Code: @franchise.Code</span>
+                        <span class="code-label">@(showFranchiseCode ? "Hide Code" : "Show Code")</span>
                     </button>
                     @if (showFranchiseCode)
                     {
                         <div class="code-display">
+                            <div class="code-value">@franchise.Code</div>
                             <p class="code-description">Share this code with other hipsters to join your franchise</p>
                         </div>
                     }
