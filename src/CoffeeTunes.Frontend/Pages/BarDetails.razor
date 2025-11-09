@@ -40,6 +40,7 @@
                     @if (activeView == ViewSwitcher.ViewBrewing)
                     {
                         <BrewingView 
+                            @ref="brewingViewComponent"
                             Bar="@bar" 
                             FranchiseId="@FranchiseId"
                             BarId="@BarId"
@@ -107,6 +108,7 @@
     private List<ContributingHipsterContract> votedHipsters = new();
     private Dictionary<Guid, string> joinedHipsters = new(); // ID -> Name mapping
     private Guid? currentUserId;
+    private BrewingView? brewingViewComponent;
 
     protected override async Task OnInitializedAsync()
     {
@@ -122,6 +124,8 @@
         HubService.OnHipsterJoined += HandleHipsterJoined;
         HubService.OnHipsterLeft += HandleHipsterLeft;
         HubService.OnBrewCycleRevealed += HandleBrewCycleRevealed;
+        HubService.OnStartPlayingVideo += HandleStartPlayingVideo;
+        HubService.OnPausePlayingVideo += HandlePausePlayingVideo;
         
         await LoadBarData();
         
@@ -356,6 +360,22 @@
         }
     }
     
+    private async Task HandleStartPlayingVideo()
+    {
+        if (brewingViewComponent != null)
+        {
+            await brewingViewComponent.PlayVideo();
+        }
+    }
+    
+    private async Task HandlePausePlayingVideo()
+    {
+        if (brewingViewComponent != null)
+        {
+            await brewingViewComponent.PauseVideo();
+        }
+    }
+    
     public async ValueTask DisposeAsync()
     {
         // Unsubscribe from events
@@ -365,6 +385,8 @@
         HubService.OnHipsterJoined -= HandleHipsterJoined;
         HubService.OnHipsterLeft -= HandleHipsterLeft;
         HubService.OnBrewCycleRevealed -= HandleBrewCycleRevealed;
+        HubService.OnStartPlayingVideo -= HandleStartPlayingVideo;
+        HubService.OnPausePlayingVideo -= HandlePausePlayingVideo;
         
         // Leave the bar
         try

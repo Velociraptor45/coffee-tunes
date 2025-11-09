@@ -47,7 +47,13 @@ else
             <div class="brewing-left">
                 @if (RevealResults == null)
                 {
-                    <IngredientVideoComponent Ingredient="@BrewCycle.Ingredient" />
+                    <IngredientVideoComponent 
+                        @ref="videoPlayerComponent"
+                        Ingredient="@BrewCycle.Ingredient"
+                        FranchiseId="@FranchiseId"
+                        BarId="@BarId"
+                        OnVideoPlayed="@HandleVideoPlayed"
+                        OnVideoPaused="@HandleVideoPaused" />
                 }
                 else
                 {
@@ -111,10 +117,17 @@ else
     [Parameter]
     public BrewCycleRevealContract? RevealResults { get; set; }
     
+    [Parameter]
+    public EventCallback OnVideoPlaySignalReceived { get; set; }
+    
+    [Parameter]
+    public EventCallback OnVideoPauseSignalReceived { get; set; }
+    
     [Inject]
     public ICoffeeTunesApi Api { get; set; } = default!;
     
     private bool isStarting = false;
+    private IngredientVideoComponent? videoPlayerComponent;
     
     private async Task StartBrewCycle()
     {
@@ -131,6 +144,46 @@ else
         finally
         {
             isStarting = false;
+        }
+    }
+    
+    private async Task HandleVideoPlayed((Guid franchiseId, Guid barId) args)
+    {
+        try
+        {
+            await Api.StartPlayingVideo(args.franchiseId, args.barId);
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error notifying video play: {ex.Message}");
+        }
+    }
+    
+    private async Task HandleVideoPaused((Guid franchiseId, Guid barId) args)
+    {
+        try
+        {
+            await Api.PausePlayingVideo(args.franchiseId, args.barId);
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error notifying video pause: {ex.Message}");
+        }
+    }
+    
+    public async Task PlayVideo()
+    {
+        if (videoPlayerComponent != null)
+        {
+            await videoPlayerComponent.PlayVideo();
+        }
+    }
+    
+    public async Task PauseVideo()
+    {
+        if (videoPlayerComponent != null)
+        {
+            await videoPlayerComponent.PauseVideo();
         }
     }
 }

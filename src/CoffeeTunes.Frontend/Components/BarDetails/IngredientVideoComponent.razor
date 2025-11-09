@@ -1,15 +1,11 @@
 @using CoffeeTunes.Contracts.BrewCycles
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
 <div class="ingredient-display">
     <h3 class="ingredient-title">@Ingredient.Name</h3>
     <div class="ingredient-video">
-        <iframe 
-            src="@GetEmbedUrl(Ingredient.Url)" 
-            title="@Ingredient.Name"
-            frameborder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-            allowfullscreen>
-        </iframe>
+        <div id="@playerId"></div>
     </div>
     <div class="ingredient-link">
         <a href="@Ingredient.Url" target="_blank" rel="noopener noreferrer" class="watch-link">
@@ -23,12 +19,98 @@
     [Parameter]
     public required BrewCycleIngredientContract Ingredient { get; set; }
     
-    private string GetEmbedUrl(string youtubeUrl)
+    [Parameter]
+    public required Guid FranchiseId { get; set; }
+    
+    [Parameter]
+    public required Guid BarId { get; set; }
+    
+    [Parameter]
+    public EventCallback<(Guid franchiseId, Guid barId)> OnVideoPlayed { get; set; }
+    
+    [Parameter]
+    public EventCallback<(Guid franchiseId, Guid barId)> OnVideoPaused { get; set; }
+    
+    private string playerId = $"youtube-player-{Guid.NewGuid()}";
+    private DotNetObjectReference<IngredientVideoComponent>? dotNetHelper;
+    private bool isPlayerInitialized = false;
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var videoId = GetVideoId(Ingredient.Url);
+                if (!string.IsNullOrEmpty(videoId))
+                {
+                    dotNetHelper = DotNetObjectReference.Create(this);
+                    await JSRuntime.InvokeVoidAsync("youtubePlayerModule.createPlayer", 
+                        playerId, videoId, dotNetHelper, FranchiseId.ToString(), BarId.ToString());
+                    isPlayerInitialized = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                await Console.Error.WriteLineAsync($"Error initializing YouTube player: {ex.Message}");
+            }
+        }
+    }
+    
+    [JSInvokable]
+    public async Task OnVideoPlayedFromJs(string franchiseId, string barId)
+    {
+        if (Guid.TryParse(franchiseId, out var fId) && Guid.TryParse(barId, out var bId))
+        {
+            await OnVideoPlayed.InvokeAsync((fId, bId));
+        }
+    }
+    
+    [JSInvokable]
+    public async Task OnVideoPausedFromJs(string franchiseId, string barId)
+    {
+        if (Guid.TryParse(franchiseId, out var fId) && Guid.TryParse(barId, out var bId))
+        {
+            await OnVideoPaused.InvokeAsync((fId, bId));
+        }
+    }
+    
+    public async Task PlayVideo()
+    {
+        if (isPlayerInitialized)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("youtubePlayerModule.playVideo", playerId);
+            }
+            catch (Exception ex)
+            {
+                await Console.Error.WriteLineAsync($"Error playing video: {ex.Message}");
+            }
+        }
+    }
+    
+    public async Task PauseVideo()
+    {
+        if (isPlayerInitialized)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("youtubePlayerModule.pauseVideo", playerId);
+            }
+            catch (Exception ex)
+            {
+                await Console.Error.WriteLineAsync($"Error pausing video: {ex.Message}");
+            }
+        }
+    }
+    
+    private string GetVideoId(string youtubeUrl)
     {
         try
         {
-            // Convert YouTube watch URL to embed URL
-            // https://www.youtube.com/watch?v=VIDEO_ID -> https://www.youtube.com/embed/VIDEO_ID
+            // Extract video ID from YouTube URL
+            // https://www.youtube.com/watch?v=VIDEO_ID -> VIDEO_ID
             var uri = new Uri(youtubeUrl);
             
             // Parse query string manually for Blazor WebAssembly compatibility
@@ -39,18 +121,28 @@
                 .Select(parts => parts[1])
                 .FirstOrDefault();
                 
-            if (string.IsNullOrEmpty(videoId))
-            {
-                // If no video ID found, return original URL
-                return youtubeUrl;
-            }
-            
-            return $"https://www.youtube.com/embed/{videoId}";
+            return videoId ?? string.Empty;
         }
         catch
         {
-            // If URL parsing fails, return original URL
-            return youtubeUrl;
+            return string.Empty;
         }
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        if (isPlayerInitialized)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("youtubePlayerModule.disposePlayer", playerId);
+            }
+            catch (Exception ex)
+            {
+                await Console.Error.WriteLineAsync($"Error disposing YouTube player: {ex.Message}");
+            }
+        }
+        
+        dotNetHelper?.Dispose();
     }
 }

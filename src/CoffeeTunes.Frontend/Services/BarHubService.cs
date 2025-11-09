@@ -21,6 +21,8 @@ public class BarHubService : IAsyncDisposable
     public event Func<HipsterJoinedContract, Task>? OnHipsterJoined;
     public event Func<Guid, Task>? OnHipsterLeft;
     public event Func<BrewCycleRevealContract, Task>? OnBrewCycleRevealed;
+    public event Func<Task>? OnStartPlayingVideo;
+    public event Func<Task>? OnPausePlayingVideo;
     
     public BarHubService(IAccessTokenProvider tokenProvider, ConnectionConfig connectionConfig)
     {
@@ -92,6 +94,18 @@ public class BarHubService : IAsyncDisposable
         {
             if (OnBrewCycleRevealed != null)
                 await OnBrewCycleRevealed.Invoke(revealContract);
+        });
+        
+        _connection.On(nameof(IBarClient.StartPlayingVideo), async () =>
+        {
+            if (OnStartPlayingVideo != null)
+                await OnStartPlayingVideo.Invoke();
+        });
+        
+        _connection.On(nameof(IBarClient.PausePlayingVideo), async () =>
+        {
+            if (OnPausePlayingVideo != null)
+                await OnPausePlayingVideo.Invoke();
         });
         
         await _connection.StartAsync();
