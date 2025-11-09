@@ -29,6 +29,7 @@ builder.Services.AddScoped<YouTubeMetadataProvider>();
 builder.Services.AddScoped<BrewCycleService>();
 builder.Services.AddScoped<BeansService>();
 builder.Services.AddScoped<BarStatisticsService>();
+builder.Services.AddScoped<FranchiseStatisticsService>();
 builder.Services.AddHttpClient("YouTubeApi", client =>
 {
     client.BaseAddress = new Uri("https://www.googleapis.com/youtube/v3/");

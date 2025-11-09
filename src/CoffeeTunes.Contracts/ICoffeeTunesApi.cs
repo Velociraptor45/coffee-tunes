@@ -63,4 +63,7 @@ public interface ICoffeeTunesApi
 
     [Put("v1/franchises/join")]
     Task JoinFranchise([Body] JoinFranchiseContract contract);
+
+    [Get("v1/franchises/{id}/stats")]
+    Task<FranchiseStatisticsContract> GetFranchiseStats([Path] Guid id);
 }
