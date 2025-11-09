@@ -20,7 +20,7 @@
         <div class="modal-body">
             <form @onsubmit="HandleSubmit">
                 <div class="form-group">
-                    <label for="franchise-name">Franchise Name</label>
+                    <label for="franchise-name">Franchise Code</label>
                     <input 
                         id="franchise-name"
                         type="text" 
@@ -95,7 +95,7 @@
         }
         catch (ApiException apiEx) when (apiEx.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
-            errorMessage = "Franchise not found. Please check the name and try again.";
+            errorMessage = "Franchise not found. Please check the code and try again.";
         }
         catch (HttpRequestException)
         {

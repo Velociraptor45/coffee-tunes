@@ -2,5 +2,5 @@ namespace CoffeeTunes.Contracts.Ingredients;
 
 public class AddIngredientContract
 {
-    public string Url { get; set; }
+    public required string Url { get; set; }
 }
