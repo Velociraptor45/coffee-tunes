@@ -1,0 +1,21 @@
+<div class="view-switcher">
+    <button class="view-tab @(ActiveView == ViewBars ? "active" : "")" @onclick="@(() => OnViewChange.InvokeAsync(ViewBars))">
+        <span class="tab-icon">☕</span>
+        <span>Bars</span>
+    </button>
+    <button class="view-tab @(ActiveView == ViewStats ? "active" : "")" @onclick="@(() => OnViewChange.InvokeAsync(ViewStats))">
+        <span class="tab-icon">📊</span>
+        <span>Statistics</span>
+    </button>
+</div>
+
+@code {
+    public const string ViewBars = "bars";
+    public const string ViewStats = "stats";
+
+    [Parameter]
+    public required string ActiveView { get; set; }
+
+    [Parameter]
+    public required EventCallback<string> OnViewChange { get; set; }
+}

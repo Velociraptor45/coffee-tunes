@@ -2,6 +2,7 @@
 @using CoffeeTunes.Contracts
 @using CoffeeTunes.Contracts.Franchise
 @using CoffeeTunes.Contracts.Bars
+@using CoffeeTunes.Frontend.Components.FranchiseDetails
 
 <PageTitle>Coffee Tunes - @(franchise?.Name ?? "Franchise")</PageTitle>
 
@@ -33,99 +34,115 @@
                     </button>
                     <h1 class="franchise-title">🏪 @franchise.Name</h1>
                     <p class="franchise-subtitle">Your coffee bar collection</p>
-                    <button class="create-bar-button" @onclick="OpenCreateBarModal">
-                        <span class="button-icon">☕</span>
-                        <span>Create New Bar</span>
-                    </button>
                 </div>
 
                 <div class="franchise-code-section">
                     <button class="code-toggle" @onclick="ToggleFranchiseCode">
                         <span class="toggle-icon">@(showFranchiseCode ? "▼" : "▶")</span>
-                        <span class="code-label">Franchise Code</span>
+                        <span class="code-label">Code: @franchise.Code</span>
                     </button>
                     @if (showFranchiseCode)
                     {
                         <div class="code-display">
-                            <div class="code-value">@franchise.Code</div>
                             <p class="code-description">Share this code with other hipsters to join your franchise</p>
                         </div>
                     }
                 </div>
 
-                @if (openBars.Any() || inSupplyBars.Any())
-                {
-                    @if (openBars.Any())
+                <FranchiseViewSwitcher ActiveView="@activeView" OnViewChange="@SwitchView" />
+
+                <div class="view-content">
+                    @if (activeView == FranchiseViewSwitcher.ViewBars)
                     {
-                        <div class="bars-section">
-                            <h2 class="section-title">🔥 Currently Open</h2>
-                            <div class="bars-grid">
-                                @foreach (var bar in openBars)
+                        <div class="bars-view">
+                            <div class="create-bar-section">
+                                <button class="create-bar-button" @onclick="OpenCreateBarModal">
+                                    <span class="button-icon">☕</span>
+                                    <span>Create New Bar</span>
+                                </button>
+                            </div>
+
+                            @if (openBars.Any() || inSupplyBars.Any())
+                            @if (openBars.Any() || inSupplyBars.Any())
+                            {
+                                @if (openBars.Any())
                                 {
-                                    <div class="bar-card open-bar" @onclick="() => NavigateToBar(bar.Id)">
-                                        <div class="bar-status-badge">
-                                            <span class="status-icon">🔥</span>
-                                            <span>OPEN</span>
+                                    <div class="bars-section">
+                                        <h2 class="section-title">🔥 Currently Open</h2>
+                                        <div class="bars-grid">
+                                            @foreach (var bar in openBars)
+                                            {
+                                                <div class="bar-card open-bar" @onclick="() => NavigateToBar(bar.Id)">
+                                                    <div class="bar-status-badge">
+                                                        <span class="status-icon">🔥</span>
+                                                        <span>OPEN</span>
+                                                    </div>
+                                                    <div class="bar-icon">☕</div>
+                                                    <h3 class="bar-topic">@bar.Topic</h3>
+                                                    <div class="bar-arrow">→</div>
+                                                </div>
+                                            }
                                         </div>
-                                        <div class="bar-icon">☕</div>
-                                        <h3 class="bar-topic">@bar.Topic</h3>
-                                        <div class="bar-arrow">→</div>
                                     </div>
                                 }
-                            </div>
+
+                                @if (inSupplyBars.Any())
+                                {
+                                    <div class="bars-section">
+                                        <h2 class="section-title">📦 In Supply</h2>
+                                        <div class="bars-grid">
+                                            @foreach (var bar in inSupplyBars)
+                                            {
+                                                <div class="bar-card in-supply-bar" @onclick="() => NavigateToBar(bar.Id)">
+                                                    <div class="bar-icon">☕</div>
+                                                    <h3 class="bar-topic">@bar.Topic</h3>
+                                                    <div class="bar-arrow">→</div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="empty-state">
+                                    <div class="empty-icon">🎵</div>
+                                    <h2>No Active Bars</h2>
+                                    <p>This franchise doesn't have any active bars yet. Time to create one!</p>
+                                </div>
+                            }
+
+                            @if (outOfSupplyBars.Any())
+                            {
+                                <div class="bars-section out-of-supply-section">
+                                    <button class="section-toggle" @onclick="ToggleOutOfSupply">
+                                        <h2 class="section-title">
+                                            <span class="toggle-icon">@(showOutOfSupply ? "▼" : "▶")</span>
+                                            <span>🚫 Out of Supply (@outOfSupplyBars.Count)</span>
+                                        </h2>
+                                    </button>
+                                    @if (showOutOfSupply)
+                                    {
+                                        <div class="bars-grid">
+                                            @foreach (var bar in outOfSupplyBars)
+                                            {
+                                                <div class="bar-card out-of-supply-bar" @onclick="() => NavigateToBar(bar.Id)">
+                                                    <div class="bar-icon">🚫</div>
+                                                    <h3 class="bar-topic">@bar.Topic</h3>
+                                                    <div class="bar-arrow">→</div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
                         </div>
                     }
-
-                    @if (inSupplyBars.Any())
+                    else if (activeView == FranchiseViewSwitcher.ViewStats)
                     {
-                        <div class="bars-section">
-                            <h2 class="section-title">📦 In Supply</h2>
-                            <div class="bars-grid">
-                                @foreach (var bar in inSupplyBars)
-                                {
-                                    <div class="bar-card in-supply-bar" @onclick="() => NavigateToBar(bar.Id)">
-                                        <div class="bar-icon">☕</div>
-                                        <h3 class="bar-topic">@bar.Topic</h3>
-                                        <div class="bar-arrow">→</div>
-                                    </div>
-                                }
-                            </div>
-                        </div>
+                        <FranchiseStatsView FranchiseId="@FranchiseId" />
                     }
-                }
-                else
-                {
-                    <div class="empty-state">
-                        <div class="empty-icon">🎵</div>
-                        <h2>No Active Bars</h2>
-                        <p>This franchise doesn't have any active bars yet. Time to create one!</p>
-                    </div>
-                }
-
-                @if (outOfSupplyBars.Any())
-                {
-                    <div class="bars-section out-of-supply-section">
-                        <button class="section-toggle" @onclick="ToggleOutOfSupply">
-                            <h2 class="section-title">
-                                <span class="toggle-icon">@(showOutOfSupply ? "▼" : "▶")</span>
-                                <span>🚫 Out of Supply (@outOfSupplyBars.Count)</span>
-                            </h2>
-                        </button>
-                        @if (showOutOfSupply)
-                        {
-                            <div class="bars-grid">
-                                @foreach (var bar in outOfSupplyBars)
-                                {
-                                    <div class="bar-card out-of-supply-bar" @onclick="() => NavigateToBar(bar.Id)">
-                                        <div class="bar-icon">🚫</div>
-                                        <h3 class="bar-topic">@bar.Topic</h3>
-                                        <div class="bar-arrow">→</div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
-                }
+                </div>
             }
         </div>
 
@@ -160,6 +177,7 @@
     private bool showOutOfSupply = false;
     private bool showFranchiseCode = false;
     private bool showCreateBarModal = false;
+    private string activeView = FranchiseViewSwitcher.ViewBars;
 
     protected override async Task OnInitializedAsync()
     {
@@ -229,6 +247,11 @@
     private void ToggleFranchiseCode()
     {
         showFranchiseCode = !showFranchiseCode;
+    }
+
+    private void SwitchView(string view)
+    {
+        activeView = view;
     }
 
     private void OpenCreateBarModal()
