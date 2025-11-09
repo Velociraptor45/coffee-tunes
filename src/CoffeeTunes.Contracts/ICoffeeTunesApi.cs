@@ -20,6 +20,12 @@ public interface ICoffeeTunesApi
 
     [Put("v1/{franchiseId}/bars/{barId}/next")]
     Task NextIngredient([Path] Guid franchiseId, [Path] Guid barId);
+
+    [Put("v1/{franchiseId}/bars/{barId}/play")]
+    Task StartPlayingVideo([Path] Guid franchiseId, [Path] Guid barId);
+
+    [Put("v1/{franchiseId}/bars/{barId}/pause")]
+    Task PausePlayingVideo([Path] Guid franchiseId, [Path] Guid barId);
     
     // Beans endpoints
     [Post("v1/{franchiseId}/bars/{barId}/beans")]
