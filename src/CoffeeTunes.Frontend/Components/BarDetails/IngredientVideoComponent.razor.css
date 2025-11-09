@@ -20,7 +20,7 @@
     margin-bottom: 1rem;
 }
 
-.ingredient-video iframe {
+::deep .ingredient-video iframe{
     position: absolute;
     top: 0;
     left: 0;
