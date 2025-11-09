@@ -5,6 +5,7 @@ using CoffeeTunes.WebApi.Hubs;
 using CoffeeTunes.WebApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace CoffeeTunes.WebApi.Endpoints;
 
@@ -19,7 +20,9 @@ public static class BrewCycleEndpoints
             .RegisterStartBrewCycle()
             .RegisterRevealIngredientResults()
             .RegisterEndBrewCycle()
-            .RegisterNextIngredient();
+            .RegisterNextIngredient()
+            .RegisterStartPlayingVideo()
+            .RegisterPausePlayingVideo();
     }
 
     private static IEndpointRouteBuilder RegisterStartBrewCycle(this IEndpointRouteBuilder builder)
@@ -144,6 +147,72 @@ public static class BrewCycleEndpoints
         await hubContext.Clients
             .Group(BarHub.GetGroupName(franchiseId, barId))
             .BrewCycleUpdated(brewCycleContract);
+
+        return Results.NoContent();
+    }
+
+    private static IEndpointRouteBuilder RegisterStartPlayingVideo(this IEndpointRouteBuilder builder)
+    {
+        builder.MapPut($"/{_routeBase}/play", StartPlayingVideo)
+            .WithName(nameof(StartPlayingVideo))
+            .RequireAuthorization("User");
+
+        return builder;
+    }
+    
+    private static async Task<IResult> StartPlayingVideo(
+        [FromRoute] Guid franchiseId,
+        [FromRoute] Guid barId,
+        [FromServices] CoffeeTunesDbContext dbContext,
+        [FromServices] FranchiseAccessService franchiseAccessService,
+        [FromServices] IHubContext<BarHub, IBarClient> hubContext,
+        CancellationToken cancellationToken)
+    {
+        await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
+
+        var currentlyAnyPlaying = await dbContext.Ingredients
+            .AsNoTracking()
+            .AnyAsync(i => i.BarId == barId && i.Selected && !i.Revealed, cancellationToken);
+        
+        if (!currentlyAnyPlaying)
+            return Results.NoContent();
+        
+        await hubContext.Clients
+            .Group(BarHub.GetGroupName(franchiseId, barId))
+            .StartPlayingVideo();
+
+        return Results.NoContent();
+    }
+
+    private static IEndpointRouteBuilder RegisterPausePlayingVideo(this IEndpointRouteBuilder builder)
+    {
+        builder.MapPut($"/{_routeBase}/pause", PausePlayingVideo)
+            .WithName(nameof(PausePlayingVideo))
+            .RequireAuthorization("User");
+
+        return builder;
+    }
+    
+    private static async Task<IResult> PausePlayingVideo(
+        [FromRoute] Guid franchiseId,
+        [FromRoute] Guid barId,
+        [FromServices] CoffeeTunesDbContext dbContext,
+        [FromServices] FranchiseAccessService franchiseAccessService,
+        [FromServices] IHubContext<BarHub, IBarClient> hubContext,
+        CancellationToken cancellationToken)
+    {
+        await franchiseAccessService.EnsureAccessToFranchiseAsync(franchiseId, cancellationToken);
+
+        var currentlyAnyPlaying = await dbContext.Ingredients
+            .AsNoTracking()
+            .AnyAsync(i => i.BarId == barId && i.Selected && !i.Revealed, cancellationToken);
+        
+        if (!currentlyAnyPlaying)
+            return Results.NoContent();
+        
+        await hubContext.Clients
+            .Group(BarHub.GetGroupName(franchiseId, barId))
+            .PausePlayingVideo();
 
         return Results.NoContent();
     }

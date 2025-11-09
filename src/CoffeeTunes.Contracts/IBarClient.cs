@@ -13,4 +13,6 @@ public interface IBarClient
     Task HipsterJoined(HipsterJoinedContract hipsterJoinedContract);
     Task HipsterLeft(Guid hipsterId);
     Task RevealBrewCycle(BrewCycleRevealContract revealContract);
+    Task StartPlayingVideo();
+    Task PausePlayingVideo();
 }
