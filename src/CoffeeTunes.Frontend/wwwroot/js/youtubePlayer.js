@@ -45,9 +45,8 @@ window.youtubePlayerModule = {
                 }
 
                 // Create the player
+                // Note: Don't specify height/width here - let CSS handle it via absolute positioning
                 this.players[elementId] = new YT.Player(elementId, {
-                    height: '100%',
-                    width: '100%',
                     videoId: videoId,
                     playerVars: {
                         'playsinline': 1,
