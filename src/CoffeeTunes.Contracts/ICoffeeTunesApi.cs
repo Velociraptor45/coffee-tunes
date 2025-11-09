@@ -33,7 +33,7 @@ public interface ICoffeeTunesApi
     Task<BarContract> GetBar([Path] Guid franchiseId, [Path] Guid id);
 
     [Get("v1/{franchiseId}/bars/{id}/stats")]
-    Task<BarContract> GetBarStats([Path] Guid franchiseId, [Path] Guid id);
+    Task<BarStatisticsContract> GetBarStats([Path] Guid franchiseId, [Path] Guid id);
 
     [Get("v1/{franchiseId}/bars/all")]
     Task<List<BarOverviewContract>> GetAllBars([Path] Guid franchiseId);
@@ -63,4 +63,7 @@ public interface ICoffeeTunesApi
 
     [Put("v1/franchises/join")]
     Task JoinFranchise([Body] JoinFranchiseContract contract);
+
+    [Get("v1/franchises/{id}/stats")]
+    Task<FranchiseStatisticsContract> GetFranchiseStats([Path] Guid id);
 }

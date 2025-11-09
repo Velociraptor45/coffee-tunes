@@ -1,0 +1,232 @@
+@using CoffeeTunes.Contracts
+@using CoffeeTunes.Contracts.Franchise
+
+@if (isLoading)
+{
+    <div class="loading-container">
+        <div class="coffee-loader">☕</div>
+        <p>Brewing franchise statistics...</p>
+    </div>
+}
+else if (errorMessage != null)
+{
+    <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <h2>Failed to load statistics</h2>
+        <p>@errorMessage</p>
+        <button class="retry-button" @onclick="LoadStatistics">Try Again</button>
+    </div>
+}
+else if (statistics != null)
+{
+    <div class="stats-container">
+        <div class="stats-header">
+            <h2>📊 Franchise Statistics</h2>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-icon">🧪</div>
+                <div class="stat-content">
+                    <div class="stat-value">@statistics.TotalIngredientsCount</div>
+                    <div class="stat-label">Total Ingredients</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">☕</div>
+                <div class="stat-content">
+                    <div class="stat-value">@statistics.BeansCastCount</div>
+                    <div class="stat-label">Beans Cast</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <div class="stat-value">@statistics.CorrectCastsCount</div>
+                    <div class="stat-label">Correct Guesses</div>
+                </div>
+            </div>
+        </div>
+
+        @if (rankedByGuesses.Any() || rankedByIngredients.Any())
+        {
+            <div class="rankings-grid">
+                <!-- Guesses Ranking -->
+                <div class="ranking-section">
+                    <div class="hipsters-section">
+                        <h3>🏆 Best Guessers</h3>
+                        <div class="hipsters-list">
+                            @foreach (var (hipster, rank) in rankedByGuesses.Select((h, i) => (h, i + 1)))
+                            {
+                                var percentage = hipster.TotalGuesses > 0 
+                                    ? (hipster.CorrectGuesses * 100.0 / hipster.TotalGuesses) 
+                                    : 0;
+                                var rankClass = rank switch
+                                {
+                                    1 => "rank-first",
+                                    2 => "rank-second",
+                                    3 => "rank-third",
+                                    _ => ""
+                                };
+
+                                <div class="hipster-card @rankClass">
+                                    <div class="hipster-rank">
+                                        @if (rank == 1)
+                                        {
+                                            <span class="rank-medal">🥇</span>
+                                        }
+                                        else if (rank == 2)
+                                        {
+                                            <span class="rank-medal">🥈</span>
+                                        }
+                                        else if (rank == 3)
+                                        {
+                                            <span class="rank-medal">🥉</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="rank-number">@rank</span>
+                                        }
+                                    </div>
+                                    <div class="hipster-name">@hipster.HipsterName</div>
+                                    <div class="hipster-stats">
+                                        <div class="stat-item">
+                                            <span class="stat-item-value">@hipster.CorrectGuesses</span>
+                                            <span class="stat-item-label">Correct</span>
+                                        </div>
+                                        <div class="stat-divider">|</div>
+                                        <div class="stat-item">
+                                            <span class="stat-item-value">@hipster.TotalGuesses</span>
+                                            <span class="stat-item-label">Total</span>
+                                        </div>
+                                        <div class="stat-divider">|</div>
+                                        <div class="stat-item">
+                                            <span class="stat-item-value">@percentage.ToString("F1")%</span>
+                                            <span class="stat-item-label">Accuracy</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ingredients Ranking -->
+                <div class="ranking-section">
+                    <div class="hipsters-section">
+                        <h3>🎵 Top Contributors</h3>
+                        <div class="hipsters-list">
+                            @foreach (var (hipster, rank) in rankedByIngredients.Select((h, i) => (h, i + 1)))
+                            {
+                                var rankClass = rank switch
+                                {
+                                    1 => "rank-first",
+                                    2 => "rank-second",
+                                    3 => "rank-third",
+                                    _ => ""
+                                };
+
+                                <div class="hipster-card @rankClass">
+                                    <div class="hipster-rank">
+                                        @if (rank == 1)
+                                        {
+                                            <span class="rank-medal">🥇</span>
+                                        }
+                                        else if (rank == 2)
+                                        {
+                                            <span class="rank-medal">🥈</span>
+                                        }
+                                        else if (rank == 3)
+                                        {
+                                            <span class="rank-medal">🥉</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="rank-number">@rank</span>
+                                        }
+                                    </div>
+                                    <div class="hipster-name">@hipster.HipsterName</div>
+                                    <div class="hipster-stats">
+                                        <div class="stat-item">
+                                            <span class="stat-item-value">@hipster.IngredientsSubmitted</span>
+                                            <span class="stat-item-label">Ingredients</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="empty-stats">
+                <div class="empty-icon">📈</div>
+                <h3>No Statistics Yet</h3>
+                <p>Start brewing and voting to see statistics here!</p>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid FranchiseId { get; set; }
+
+    [Inject]
+    public ICoffeeTunesApi Api { get; set; } = default!;
+
+    private FranchiseStatisticsContract? statistics;
+    private List<FranchiseHipsterStatisticsContract> rankedByGuesses = new();
+    private List<FranchiseHipsterStatisticsContract> rankedByIngredients = new();
+    private bool isLoading = false;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Load statistics when the component is shown
+        await LoadStatistics();
+    }
+
+    private async Task LoadStatistics()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            statistics = await Api.GetFranchiseStats(FranchiseId);
+            
+            // Rank hipsters by correct guesses (descending)
+            rankedByGuesses = statistics.HipsterStatistics
+                .OrderByDescending(h => h.CorrectGuesses)
+                .ThenByDescending(h => h.TotalGuesses > 0 ? (h.CorrectGuesses * 100.0 / h.TotalGuesses) : 0)
+                .ToList();
+            
+            // Rank hipsters by ingredients submitted (descending)
+            rankedByIngredients = statistics.HipsterStatistics
+                .OrderByDescending(h => h.IngredientsSubmitted)
+                .ToList();
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "Unable to connect to the server. Please check your connection and try again.";
+            statistics = null;
+            rankedByGuesses = new();
+            rankedByIngredients = new();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Unable to load statistics. Please try again later.";
+            statistics = null;
+            rankedByGuesses = new();
+            rankedByIngredients = new();
+            await Console.Error.WriteLineAsync($"Error loading franchise statistics: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

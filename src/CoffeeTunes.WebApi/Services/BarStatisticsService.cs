@@ -87,7 +87,8 @@ public class BarStatisticsService(CoffeeTunesDbContext dbContext)
                 BarId = bar.Id,
                 HipsterId = hipster.HipsterId,
                 CorrectGuesses = hipsterBeans.Count(b => b.IsCorrect),
-                TotalGuesses = hipsterBeans.Count
+                TotalGuesses = hipsterBeans.Count,
+                IngredientsSubmitted = bar.Ingredients.Count(i => i.Owners!.Any(o => o.HipsterId == hipster.HipsterId))
             };
             hipsterStats.Add(hipsterStat);
         }

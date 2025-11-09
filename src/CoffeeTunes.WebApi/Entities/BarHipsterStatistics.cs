@@ -15,6 +15,7 @@ public class BarHipsterStatistics
 
     public required int CorrectGuesses { get; set; }
     public required int TotalGuesses { get; set; }
+    public required int IngredientsSubmitted { get; set; }
 
     [ForeignKey(nameof(BarStatisticsId))]
     public BarStatistics? BarStatistics { get; set; }

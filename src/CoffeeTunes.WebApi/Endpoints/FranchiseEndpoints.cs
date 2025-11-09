@@ -2,6 +2,7 @@ using CoffeeTunes.Contracts.Franchise;
 using CoffeeTunes.WebApi.Contexts;
 using CoffeeTunes.WebApi.Entities;
 using CoffeeTunes.WebApi.Services;
+using CoffeeTunes.WebApi.Services.Youtube;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +18,8 @@ public static class FranchiseEndpoints
             .RegisterCreateFranchise()
             .RegisterGetFranchise()
             .RegisterGetAllFranchises()
-            .RegisterJoinFranchise();
+            .RegisterJoinFranchise()
+            .RegisterGetFranchiseStats();
     }
 
     private static IEndpointRouteBuilder RegisterCreateFranchise(this IEndpointRouteBuilder builder)
@@ -190,5 +192,27 @@ public static class FranchiseEndpoints
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Results.Ok();
+    }
+
+    private static IEndpointRouteBuilder RegisterGetFranchiseStats(this IEndpointRouteBuilder builder)
+    {
+        builder.MapGet($"/{_routeBase}/{{id:guid}}/stats", GetFranchiseStats)
+            .WithName(nameof(GetFranchiseStats))
+            .RequireAuthorization("User");
+
+        return builder;
+    }
+    
+    private static async Task<IResult> GetFranchiseStats(
+        [FromRoute] Guid id,
+        [FromServices] FranchiseAccessService franchiseAccessService,
+        [FromServices] FranchiseStatisticsService franchiseStatisticsService,
+        CancellationToken cancellationToken)
+    {
+        await franchiseAccessService.EnsureAccessToFranchiseAsync(id, cancellationToken);
+        
+        var stats = await franchiseStatisticsService.GetFranchiseStatistics(id, cancellationToken);
+
+        return Results.Ok(stats);
     }
 }
