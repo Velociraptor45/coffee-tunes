@@ -47,14 +47,9 @@
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadUserInfo();
-    }
-
     private async Task LoadUserInfo()
     {
-        if (AuthenticationStateTask != null)
+        if (AuthenticationStateTask != null && !currentUserId.HasValue)
         {
             var authState = await AuthenticationStateTask;
             var user = authState.User;
@@ -99,6 +94,7 @@
 
     private async Task HandleDeleteAccount()
     {
+        await LoadUserInfo();
         if (!currentUserId.HasValue)
         {
             await Console.Error.WriteLineAsync("Cannot delete account: User ID not found");
