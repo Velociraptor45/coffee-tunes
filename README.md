@@ -63,7 +63,7 @@ The application consists of:
 
 - .NET 9 SDK
 - Modern web browser with WebAssembly support
-- (Optional) Docker for containerized deployment
+- Docker for containerized execution
 
 ### Running Locally
 
@@ -72,19 +72,44 @@ The application consists of:
    git clone https://github.com/Velociraptor45/coffee-tunes.git
    cd coffee-tunes/src
    ```
+   
+2. **Create appsettings.Local.json in `CoffeeTunes.WebApi` and fill out your authentication and YouTube API key details:
+```json
+{
+  "CT_AUTH_AUTHORITY": "",
+  "CT_AUTH_AUDIENCE": "account",
+  "CT_AUTH_VALID_TYPES__0": "JWT",
+  "CT_AUTH_CLAIM_NAME": "given_name",
+  "CT_AUTH_CLAIM_ROLE": "",
+  "CT_AUTH_ROLE_NAME_USER": "",
+  "CT_YT_API_KEY": ""
+}
+```
 
-2. **Restore dependencies**
+3. **Create an appsettings.json in `CoffeeTunes.Frontend/wwwroot` and fill out your authentication details:
+```json
+{
+  "CT_AUTH_AUTHORITY": "",
+  "CT_AUTH_CLIENT_ID": "",
+  "CT_AUTH_ROLE_NAME_USER": "",
+  "CT_AUTH_CLAIM_NAME": "given_name",
+  "CT_AUTH_CLAIM_ROLE": "",
+  "CT_API_URL": "https://localhost:5050"
+}
+```
+
+4. **Restore dependencies**
    ```bash
    dotnet restore
    ```
 
-3. **Run with .NET Aspire (recommended)**
+5. **Run with .NET Aspire (recommended)**
    ```bash
    dotnet run --project CoffeeTunes.Aspire.AppHost
    ```
    This will start both the API and frontend, and open the Aspire dashboard.
 
-4. **Or run components separately**
+6. **Or run components separately**
    
    Terminal 1 (Backend):
    ```bash
@@ -157,30 +182,6 @@ The application uses OpenID Connect (OIDC) for authentication. All pages require
 - **Authentication**: OpenID Connect (OIDC)
 - **Orchestration**: .NET Aspire
 - **Styling**: Scoped CSS with CSS Grid and Flexbox
-
-## 📁 Project Structure
-
-```
-src/
-├── CoffeeTunes.Aspire.AppHost/    # Orchestration
-├── CoffeeTunes.Contracts/          # Shared contracts
-│   ├── Bars/
-│   ├── Beans/
-│   ├── BrewCycles/
-│   ├── Franchise/
-│   ├── Hipsters/
-│   └── Ingredients/
-├── CoffeeTunes.Frontend/           # Blazor WASM app
-│   ├── Auth/
-│   ├── Components/
-│   │   ├── BarDetails/            # Bar-specific components
-│   │   └── FranchiseDetails/      # Franchise components
-│   ├── Layout/
-│   ├── Pages/
-│   ├── Services/
-│   └── wwwroot/
-└── CoffeeTunes.WebApi/             # Backend API
-```
 
 ## 🎮 Game Flow Example
 
