@@ -259,6 +259,85 @@
     font-size: 1.1rem;
 }
 
+.contributors-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 3px solid #d7ccc8;
+}
+
+.section-title {
+    color: #3e2723;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-weight: 700;
+}
+
+.contributors-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.contributor-item {
+    background: linear-gradient(135deg, #f5f5dc 0%, #efebe9 100%);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    border: 2px solid #8d6e63;
+}
+
+.contributor-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.contributor-item.contributed {
+    border-color: #4caf50;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+}
+
+.contributor-item.not-contributed {
+    border-color: #ff9800;
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+}
+
+.contributor-name {
+    color: #3e2723;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.contributor-status {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.contributor-item.contributed .contributor-status {
+    color: #2e7d32;
+}
+
+.contributor-item.not-contributed .contributor-status {
+    color: #ef6c00;
+}
+
+.status-icon {
+    font-size: 1.1rem;
+}
+
+.status-text {
+    font-size: 0.85rem;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
     .ingredients-grid {
@@ -277,5 +356,13 @@
 
     .ingredient-thumbnail {
         height: 200px;
+    }
+
+    .contributors-list {
+        grid-template-columns: 1fr;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
     }
 }

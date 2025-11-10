@@ -34,7 +34,7 @@
             {
                 <BarHeader Bar="@bar" OnBackClick="@NavigateBack" />
 
-                <ViewSwitcher ActiveView="@activeView" OnViewChange="@SwitchView" />
+                <ViewSwitcher ActiveView="@activeView" OnViewChange="@SwitchView" Bar="@bar" />
 
                 <div class="view-content">
                     @if (activeView == ViewSwitcher.ViewBrewing)
@@ -66,6 +66,14 @@
                     {
                         <StatsView FranchiseId="@FranchiseId" BarId="@BarId" />
                     }
+                    else if (activeView == ViewSwitcher.ViewPlaylist)
+                    {
+                        <PlaylistView
+                            Playlist="@playlist"
+                            IsLoading="@isLoadingPlaylist"
+                            ErrorMessage="@playlistErrorMessage"
+                            OnRetry="@LoadPlaylist" />
+                    }
                 </div>
             }
         </div>
@@ -96,12 +104,15 @@
 
     private BarContract? bar;
     private List<IngredientContract> ingredients = new();
+    private List<IngredientPlaylistEntry> playlist = new();
     private BrewCycleContract? currentBrewCycle;
     private BrewCycleRevealContract? revealResults;
     private bool isLoading = true;
     private bool isLoadingIngredients = false;
+    private bool isLoadingPlaylist = false;
     private string? errorMessage;
     private string? ingredientsErrorMessage;
+    private string? playlistErrorMessage;
     private string activeView = ViewSwitcher.ViewBrewing;
     private Guid? previousBarId;
     private HashSet<Guid> votedHipsterIds = new();
@@ -245,11 +256,43 @@
         {
             await LoadIngredients();
         }
+        
+        // Load playlist when switching to playlist view
+        if (view == ViewSwitcher.ViewPlaylist && !isLoadingPlaylist && !playlist.Any() && playlistErrorMessage == null)
+        {
+            await LoadPlaylist();
+        }
     }
 
     private async Task HandleIngredientAdded()
     {
         await LoadIngredients();
+    }
+
+    private async Task LoadPlaylist()
+    {
+        isLoadingPlaylist = true;
+        playlistErrorMessage = null;
+
+        try
+        {
+            playlist = await Api.GetIngredientPlaylist(FranchiseId, BarId);
+        }
+        catch (HttpRequestException)
+        {
+            playlistErrorMessage = "Unable to connect to the server. Please check your connection and try again.";
+            playlist = new();
+        }
+        catch (Exception ex)
+        {
+            playlistErrorMessage = "Unable to load playlist. Please try again later.";
+            playlist = new();
+            await Console.Error.WriteLineAsync($"Error loading playlist: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingPlaylist = false;
+        }
     }
 
     private void NavigateBack()
