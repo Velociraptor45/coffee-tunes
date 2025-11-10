@@ -73,30 +73,30 @@ The application consists of:
    cd coffee-tunes/src
    ```
    
-2. **Create appsettings.Local.json in `CoffeeTunes.WebApi` and fill out your authentication and YouTube API key details:
-```json
-{
-  "CT_AUTH_AUTHORITY": "",
-  "CT_AUTH_AUDIENCE": "account",
-  "CT_AUTH_VALID_TYPES__0": "JWT",
-  "CT_AUTH_CLAIM_NAME": "given_name",
-  "CT_AUTH_CLAIM_ROLE": "",
-  "CT_AUTH_ROLE_NAME_USER": "",
-  "CT_YT_API_KEY": ""
-}
-```
+2. **Create appsettings.Local.json in `CoffeeTunes.WebApi` and fill out your authentication and YouTube API key details:**
+   ```json
+   {
+     "CT_AUTH_AUTHORITY": "",
+     "CT_AUTH_AUDIENCE": "account",
+     "CT_AUTH_VALID_TYPES__0": "JWT",
+     "CT_AUTH_CLAIM_NAME": "given_name",
+     "CT_AUTH_CLAIM_ROLE": "",
+     "CT_AUTH_ROLE_NAME_USER": "",
+     "CT_YT_API_KEY": ""
+   }
+   ```
 
-3. **Create an appsettings.json in `CoffeeTunes.Frontend/wwwroot` and fill out your authentication details:
-```json
-{
-  "CT_AUTH_AUTHORITY": "",
-  "CT_AUTH_CLIENT_ID": "",
-  "CT_AUTH_ROLE_NAME_USER": "",
-  "CT_AUTH_CLAIM_NAME": "given_name",
-  "CT_AUTH_CLAIM_ROLE": "",
-  "CT_API_URL": "https://localhost:5050"
-}
-```
+3. **Create an appsettings.json in `CoffeeTunes.Frontend/wwwroot` and fill out your authentication details:**
+   ```json
+   {
+     "CT_AUTH_AUTHORITY": "",
+     "CT_AUTH_CLIENT_ID": "",
+     "CT_AUTH_ROLE_NAME_USER": "",
+     "CT_AUTH_CLAIM_NAME": "given_name",
+     "CT_AUTH_CLAIM_ROLE": "",
+     "CT_API_URL": "https://localhost:5050"
+   }
+   ```
 
 4. **Restore dependencies**
    ```bash
