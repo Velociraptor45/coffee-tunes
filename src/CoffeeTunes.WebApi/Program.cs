@@ -94,6 +94,7 @@ app.RegisterBarEndpoints();
 app.RegisterIngredientEndpoints();
 app.RegisterBrewCycleEndpoints();
 app.RegisterBeansEndpoints();
+app.RegisterHipsterEndpoints();
 
 app.MapHub<BarHub>("/hubs/bar");
 

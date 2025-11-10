@@ -1,6 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var postgres = builder.AddPostgres("postgres")
+var postgres = builder.AddPostgres("postgres").WithPgAdmin()
     .WithVolume("postgres-data", "/var/lib/postgresql/data")
     .AddDatabase("postgresdb");
 

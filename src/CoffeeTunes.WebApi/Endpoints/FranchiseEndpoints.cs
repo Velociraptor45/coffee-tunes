@@ -19,7 +19,9 @@ public static class FranchiseEndpoints
             .RegisterGetFranchise()
             .RegisterGetAllFranchises()
             .RegisterJoinFranchise()
-            .RegisterGetFranchiseStats();
+            .RegisterGetFranchiseStats()
+            .RegisterLeaveFranchise()
+            .RegisterDeleteFranchise();
     }
 
     private static IEndpointRouteBuilder RegisterCreateFranchise(this IEndpointRouteBuilder builder)
@@ -214,5 +216,68 @@ public static class FranchiseEndpoints
         var stats = await franchiseStatisticsService.GetFranchiseStatistics(id, cancellationToken);
 
         return Results.Ok(stats);
+    }
+
+    private static IEndpointRouteBuilder RegisterLeaveFranchise(this IEndpointRouteBuilder builder)
+    {
+        builder.MapPut($"/{_routeBase}/{{id:guid}}/leave", LeaveFranchise)
+            .WithName(nameof(LeaveFranchise))
+            .RequireAuthorization("User");
+
+        return builder;
+    }
+    
+    private static async Task<IResult> LeaveFranchise(
+        [FromRoute] Guid id,
+        [FromServices] CoffeeTunesDbContext dbContext,
+        [FromServices] FranchiseAccessService franchiseAccessService,
+        CancellationToken cancellationToken)
+    {
+        await franchiseAccessService.EnsureAccessToFranchiseAsync(id, cancellationToken);
+        var (hipsterId, _) = franchiseAccessService.GetHipsterInfoFromToken()
+                             ?? throw new InvalidOperationException("Authentication failed");
+        
+        var hipsterInFranchise = await dbContext.HipstersInFranchises
+            .FirstOrDefaultAsync(h => h.HipsterId == hipsterId, cancellationToken);
+        
+        if (hipsterInFranchise is null)
+            return Results.NoContent();
+        
+        dbContext.Remove(hipsterInFranchise);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Results.NoContent();
+    }
+
+    private static IEndpointRouteBuilder RegisterDeleteFranchise(this IEndpointRouteBuilder builder)
+    {
+        builder.MapDelete($"/{_routeBase}/{{id:guid}}", DeleteFranchise)
+            .WithName(nameof(DeleteFranchise))
+            .RequireAuthorization("User");
+
+        return builder;
+    }
+    
+    private static async Task<IResult> DeleteFranchise(
+        [FromRoute] Guid id,
+        [FromServices] CoffeeTunesDbContext dbContext,
+        [FromServices] FranchiseAccessService franchiseAccessService,
+        CancellationToken cancellationToken)
+    {
+        await franchiseAccessService.EnsureAccessToFranchiseAsync(id, cancellationToken);
+        
+        var hipsterLeftInFranchise = await dbContext.HipstersInFranchises
+            .CountAsync(h => h.FranchiseId == id, cancellationToken);
+        
+        if(hipsterLeftInFranchise != 1)
+            return Results.UnprocessableEntity("You can't delete a franchise with other hipsters in it.");
+        
+        var franchise = await dbContext.Franchises
+            .FirstAsync(f => f.Id == id, cancellationToken);
+        
+        dbContext.Franchises.Remove(franchise);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Results.NoContent();
     }
 }

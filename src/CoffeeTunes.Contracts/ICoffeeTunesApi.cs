@@ -78,4 +78,14 @@ public interface ICoffeeTunesApi
 
     [Get("v1/franchises/{id}/stats")]
     Task<FranchiseStatisticsContract> GetFranchiseStats([Path] Guid id);
+
+    [Put("v1/franchises/{id}/leave")]
+    Task LeaveFranchise([Path] Guid id);
+
+    [Delete("v1/franchises/{id}")]
+    Task DeleteFranchise([Path] Guid id);
+
+    // Hipster endpoints
+    [Delete("v1/hipsters/{id}")]
+    Task DeleteAccount([Path] Guid id);
 }
