@@ -232,6 +232,48 @@
     font-style: italic;
 }
 
+.franchise-actions-section {
+    text-align: right;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+}
+
+.franchise-action-button {
+    background: none;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.franchise-action-button .action-icon {
+    font-size: 0.9rem;
+}
+
+.leave-button {
+    color: #8d6e63;
+}
+
+.leave-button:hover {
+    color: #6d4c41;
+    background: rgba(109, 76, 65, 0.05);
+}
+
+.delete-button {
+    color: #c62828;
+}
+
+.delete-button:hover {
+    color: #b71c1c;
+    background: rgba(198, 40, 40, 0.05);
+}
+
 .create-bar-section {
     text-align: center;
     margin-bottom: 2rem;
