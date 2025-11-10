@@ -1,0 +1,80 @@
+<div class="modal-backdrop @(IsVisible ? "show" : "")" @onclick="OnBackdropClick">
+    <div class="modal-content" @onclick:stopPropagation="true">
+        <div class="modal-header">
+            <h2 class="modal-title">@Title</h2>
+            <button class="modal-close" @onclick="Cancel">✕</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="confirmation-message">
+                <div class="warning-icon">⚠️</div>
+                <p>@Message</p>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" @onclick="Cancel" disabled="@isProcessing">
+                Cancel
+            </button>
+            <button type="button" class="btn-confirm" @onclick="Confirm" disabled="@isProcessing">
+                @if (isProcessing)
+                {
+                    <span class="spinner">☕</span>
+                    <span>@ProcessingText</span>
+                }
+                else
+                {
+                    <span>@ConfirmText</span>
+                }
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "Confirm Action";
+
+    [Parameter]
+    public string Message { get; set; } = "Are you sure you want to proceed?";
+
+    [Parameter]
+    public string ConfirmText { get; set; } = "Confirm";
+
+    [Parameter]
+    public string ProcessingText { get; set; } = "Processing...";
+
+    [Parameter]
+    public EventCallback OnConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private bool isProcessing = false;
+
+    private async Task Confirm()
+    {
+        isProcessing = true;
+        await OnConfirm.InvokeAsync();
+        isProcessing = false;
+    }
+
+    private void Cancel()
+    {
+        if (!isProcessing)
+        {
+            OnCancel.InvokeAsync();
+        }
+    }
+
+    private void OnBackdropClick()
+    {
+        if (!isProcessing)
+        {
+            Cancel();
+        }
+    }
+}

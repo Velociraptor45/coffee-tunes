@@ -50,6 +50,23 @@
                     }
                 </div>
 
+                <div class="franchise-actions-section">
+                    @if (franchise.HipstersInFranchise.Count() > 1)
+                    {
+                        <button class="franchise-action-button leave-button" @onclick="ShowLeaveFranchiseConfirmation">
+                            <span class="action-icon">🚪</span>
+                            <span>Leave Franchise</span>
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="franchise-action-button delete-button" @onclick="ShowDeleteFranchiseConfirmation">
+                            <span class="action-icon">🗑️</span>
+                            <span>Delete Franchise</span>
+                        </button>
+                    }
+                </div>
+
                 <FranchiseViewSwitcher ActiveView="@activeView" OnViewChange="@SwitchView" />
 
                 <div class="view-content">
@@ -151,6 +168,24 @@
             FranchiseId="@FranchiseId"
             OnClose="@CloseCreateBarModal" 
             OnBarCreated="@HandleBarCreated" />
+
+        <ConfirmationModal 
+            IsVisible="@showLeaveFranchiseModal"
+            Title="Leave Franchise"
+            Message="Are you sure you want to leave this franchise? You will lose access to all bars in this franchise."
+            ConfirmText="Leave Franchise"
+            ProcessingText="Leaving..."
+            OnConfirm="@HandleLeaveFranchise"
+            OnCancel="@CloseLeaveFranchiseModal" />
+
+        <ConfirmationModal 
+            IsVisible="@showDeleteFranchiseModal"
+            Title="Delete Franchise"
+            Message="Are you sure you want to delete this franchise? This action cannot be undone. All bars in this franchise will be permanently deleted."
+            ConfirmText="Delete Franchise"
+            ProcessingText="Deleting..."
+            OnConfirm="@HandleDeleteFranchise"
+            OnCancel="@CloseDeleteFranchiseModal" />
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -177,6 +212,8 @@
     private bool showOutOfSupply = false;
     private bool showFranchiseCode = false;
     private bool showCreateBarModal = false;
+    private bool showLeaveFranchiseModal = false;
+    private bool showDeleteFranchiseModal = false;
     private string activeView = FranchiseViewSwitcher.ViewBars;
 
     protected override async Task OnInitializedAsync()
@@ -267,5 +304,61 @@
     private async Task HandleBarCreated()
     {
         await LoadFranchiseData();
+    }
+
+    private void ShowLeaveFranchiseConfirmation()
+    {
+        showLeaveFranchiseModal = true;
+    }
+
+    private void CloseLeaveFranchiseModal()
+    {
+        showLeaveFranchiseModal = false;
+    }
+
+    private async Task HandleLeaveFranchise()
+    {
+        try
+        {
+            await Api.LeaveFranchise(FranchiseId);
+            Navigation.NavigateTo("/franchises");
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error leaving franchise: {ex.Message}");
+            errorMessage = "Unable to leave franchise. Please try again later.";
+        }
+        finally
+        {
+            showLeaveFranchiseModal = false;
+        }
+    }
+
+    private void ShowDeleteFranchiseConfirmation()
+    {
+        showDeleteFranchiseModal = true;
+    }
+
+    private void CloseDeleteFranchiseModal()
+    {
+        showDeleteFranchiseModal = false;
+    }
+
+    private async Task HandleDeleteFranchise()
+    {
+        try
+        {
+            await Api.DeleteFranchise(FranchiseId);
+            Navigation.NavigateTo("/franchises");
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error deleting franchise: {ex.Message}");
+            errorMessage = "Unable to delete franchise. Please try again later.";
+        }
+        finally
+        {
+            showDeleteFranchiseModal = false;
+        }
     }
 }

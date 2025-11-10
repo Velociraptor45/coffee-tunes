@@ -1,7 +1,9 @@
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using CoffeeTunes.Frontend.Configs
+@using CoffeeTunes.Contracts
 @inject NavigationManager Navigation
 @inject AuthConfig AuthConfig
+@inject ICoffeeTunesApi Api
 
 <AuthorizeView>
     <Authorized>
@@ -14,18 +16,54 @@
             @if (showDropdown)
             {
                 <div class="user-dropdown">
-                    <button class="logout-button" @onclick="BeginLogout">
-                        <span class="logout-icon">🚪</span>
+                    <button class="dropdown-item delete-account-button" @onclick="ShowDeleteAccountConfirmation">
+                        <span class="item-icon">🗑️</span>
+                        <span>Delete Account</span>
+                    </button>
+                    <button class="dropdown-item logout-button" @onclick="BeginLogout">
+                        <span class="item-icon">🚪</span>
                         <span>Logout</span>
                     </button>
                 </div>
             }
         </div>
+
+        <ConfirmationModal 
+            IsVisible="@showDeleteAccountModal"
+            Title="Delete Account"
+            Message="Are you sure you want to delete your account? This action cannot be undone. All your data, including franchises you own, will be permanently deleted."
+            ConfirmText="Delete Account"
+            ProcessingText="Deleting..."
+            OnConfirm="@HandleDeleteAccount"
+            OnCancel="@CloseDeleteAccountModal" />
     </Authorized>
 </AuthorizeView>
 
 @code {
     private bool showDropdown = false;
+    private bool showDeleteAccountModal = false;
+    private Guid? currentUserId;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
+    private async Task LoadUserInfo()
+    {
+        if (AuthenticationStateTask != null && !currentUserId.HasValue)
+        {
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var subClaim = user.FindFirst("sub");
+                if (subClaim != null && Guid.TryParse(subClaim.Value, out var userId))
+                {
+                    currentUserId = userId;
+                }
+            }
+        }
+    }
 
     private void ToggleDropdown()
     {
@@ -41,5 +79,42 @@
     private void BeginLogout()
     {
         Navigation.NavigateToLogout("authentication/logout");
+    }
+
+    private void ShowDeleteAccountConfirmation()
+    {
+        showDropdown = false;
+        showDeleteAccountModal = true;
+    }
+
+    private void CloseDeleteAccountModal()
+    {
+        showDeleteAccountModal = false;
+    }
+
+    private async Task HandleDeleteAccount()
+    {
+        await LoadUserInfo();
+        if (!currentUserId.HasValue)
+        {
+            await Console.Error.WriteLineAsync("Cannot delete account: User ID not found");
+            showDeleteAccountModal = false;
+            return;
+        }
+
+        try
+        {
+            await Api.DeleteAccount(currentUserId.Value);
+            // After successful deletion, log the user out
+            Navigation.NavigateToLogout("authentication/logout");
+        }
+        catch (Exception ex)
+        {
+            await Console.Error.WriteLineAsync($"Error deleting account: {ex.Message}");
+        }
+        finally
+        {
+            showDeleteAccountModal = false;
+        }
     }
 }
