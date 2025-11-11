@@ -4,6 +4,8 @@
     gap: 1rem;
     margin-bottom: 2rem;
     flex-wrap: wrap;
+    width: 100%;
+    max-width: 1200px;
 }
 
 .view-tab {
