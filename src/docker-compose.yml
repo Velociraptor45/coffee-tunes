@@ -30,8 +30,9 @@ services:
       - traefik_web
     labels:
       - traefik.enable=true
-      - traefik.http.routers.coffee-music-api.entrypoints=https
+      - traefik.http.routers.coffee-music-api.entrypoints=websecure
       - "traefik.http.routers.coffee-music-api.rule=Host(`coffee-music-api.todo`)"
+      - traefik.http.routers.coffee-music-api.tls.certresolver=letsencrypt
       - traefik.http.routers.coffee-music-api.tls=true
       - traefik.http.services.coffee-music-api-service.loadbalancer.server.port=80
 
@@ -44,13 +45,13 @@ services:
     networks:
       - internal
       - traefik_services
-    deploy:
-      labels:
-        - traefik.enable=true
-        - traefik.http.routers.coffee-music.entrypoints=https
-        - "traefik.http.routers.coffee-music.rule=Host(`coffee-music.todo`)"
-        - traefik.http.routers.coffee-music.tls=true
-        - traefik.http.services.coffee-music-service.loadbalancer.server.port=80
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.coffee-music.entrypoints=websecure
+      - "traefik.http.routers.coffee-music.rule=Host(`coffee-music.todo`)"
+      - traefik.http.routers.coffee-music.tls.certresolver=letsencrypt
+      - traefik.http.routers.coffee-music.tls=true
+      - traefik.http.services.coffee-music-service.loadbalancer.server.port=80
 
 networks:
   traefik_web:
