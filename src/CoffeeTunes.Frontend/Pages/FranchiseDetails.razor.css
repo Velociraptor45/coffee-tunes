@@ -520,6 +520,13 @@
     font-size: 1.1rem;
 }
 
+@media (min-width: 769px) {
+    .franchise-sidebar {
+        position: absolute;
+        right: 20px;
+    }
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
     .franchise-details-container {
@@ -533,6 +540,10 @@
     .back-button {
         position: static;
         margin-bottom: 2rem;
+    }
+
+    .franchise-main-content {
+        margin: 0 auto;
     }
 
     .franchise-content-wrapper {
