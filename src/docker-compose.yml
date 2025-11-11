@@ -11,7 +11,6 @@ services:
       - todo/data:/var/lib/postgresql/data
 
   api:
-    image: coffeemusic/api
     build:
       context: .
       dockerfile: ./Api-Dockerfile
@@ -28,16 +27,15 @@ services:
       - database
     networks:
       - internal
-    #   - traefik_web
-    # labels:
-    #   - traefik.enable=true
-    #   - traefik.http.routers.coffee-music-api.entrypoints=https
-    #   - "traefik.http.routers.coffee-music-api.rule=Host(`coffee-music-api.todo`)"
-    #   - traefik.http.routers.coffee-music-api.tls=true
-    #   - traefik.http.services.coffee-music-api-service.loadbalancer.server.port=80
+      - traefik_web
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.coffee-music-api.entrypoints=https
+      - "traefik.http.routers.coffee-music-api.rule=Host(`coffee-music-api.todo`)"
+      - traefik.http.routers.coffee-music-api.tls=true
+      - traefik.http.services.coffee-music-api-service.loadbalancer.server.port=80
 
   frontend:
-    image: coffeemusic/frontend
     build:
       context: .
       dockerfile: ./Frontend-Dockerfile
