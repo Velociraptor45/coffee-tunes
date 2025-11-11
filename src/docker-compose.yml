@@ -44,7 +44,7 @@ services:
       - api
     networks:
       - internal
-      - traefik_services
+      - traefik_web
     labels:
       - traefik.enable=true
       - traefik.http.routers.coffee-music.entrypoints=websecure
