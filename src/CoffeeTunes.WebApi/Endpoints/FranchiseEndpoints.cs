@@ -165,7 +165,7 @@ public static class FranchiseEndpoints
         
         var franchise = await dbContext.Franchises
             .Include(c => c.HipstersInFranchises)
-            .FirstOrDefaultAsync(c => c.Code == contract.Code, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Code == contract.Code.ToUpper(), cancellationToken);
         
         if (franchise is null)
             return Results.NotFound("Franchise not found");
