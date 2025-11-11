@@ -3,8 +3,6 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-*Migrations*
-
 src/CoffeeTunes.Frontend/wwwroot/appsettings.json
 appsettings.Local.json
 http-client.private.env.json
