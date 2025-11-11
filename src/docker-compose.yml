@@ -1,0 +1,61 @@
+services:
+  database:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: todo
+      POSTGRES_USER: coffeemusic
+      POSTGRES_DB: coffeemusic
+    networks: 
+      - internal
+    volumes:
+      - todo/data:/var/lib/postgresql/data
+
+  api:
+    image: coffeemusic/api
+    build:
+      context: .
+      dockerfile: ./Api-Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      CT_AUTH_AUTHORITY: todo
+      CT_AUTH_AUDIENCE: account
+      CT_AUTH_VALID_TYPES__0: JWT
+      CT_AUTH_CLAIM_NAME: given_name
+      CT_AUTH_CLAIM_ROLE: todo
+      CT_AUTH_ROLE_NAME_USER: todo
+      CT_YT_API_KEY: todo
+    depends_on:
+      - database
+    networks:
+      - internal
+    #   - traefik_web
+    # labels:
+    #   - traefik.enable=true
+    #   - traefik.http.routers.coffee-music-api.entrypoints=https
+    #   - "traefik.http.routers.coffee-music-api.rule=Host(`coffee-music-api.todo`)"
+    #   - traefik.http.routers.coffee-music-api.tls=true
+    #   - traefik.http.services.coffee-music-api-service.loadbalancer.server.port=80
+
+  frontend:
+    image: coffeemusic/frontend
+    build:
+      context: .
+      dockerfile: ./Frontend-Dockerfile
+    depends_on:
+      - api
+    networks:
+      - internal
+      - traefik_services
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.coffee-music.entrypoints=https
+        - "traefik.http.routers.coffee-music.rule=Host(`coffee-music.todo`)"
+        - traefik.http.routers.coffee-music.tls=true
+        - traefik.http.services.coffee-music-service.loadbalancer.server.port=80
+
+networks:
+  traefik_web:
+    external: true
+  internal:
+    driver: bridge
