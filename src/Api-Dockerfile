@@ -20,4 +20,5 @@ RUN chmod +x ./CoffeeTunes.WebApi
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 ENTRYPOINT ["./CoffeeTunes.WebApi"]
