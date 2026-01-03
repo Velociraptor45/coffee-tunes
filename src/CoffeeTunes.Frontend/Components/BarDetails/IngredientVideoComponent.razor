@@ -39,14 +39,17 @@
     {
         if (firstRender)
         {
+            Console.WriteLine("Executing first render...");
             try
             {
                 var videoId = GetVideoId(Ingredient.Url);
                 if (!string.IsNullOrEmpty(videoId))
                 {
+                    Console.WriteLine($"Creating video frame for id {videoId}");
                     dotNetHelper = DotNetObjectReference.Create(this);
                     await JSRuntime.InvokeVoidAsync("youtubePlayerModule.createPlayer", 
                         playerId, videoId, dotNetHelper, FranchiseId.ToString(), BarId.ToString());
+                    Console.WriteLine("Player initialization finished.");
                     isPlayerInitialized = true;
                 }
             }
