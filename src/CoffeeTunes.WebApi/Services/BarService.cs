@@ -25,7 +25,8 @@ public class BarService(CoffeeTunesDbContext dbContext)
 
         var contributingHipsters = await dbContext.Ingredients
             .AsNoTracking()
-            .SelectMany(i => i.Owners!)
+            .Where(i => i.BarId == barId)
+            .SelectMany(i => i.Owners)
             .Join(
                 dbContext.Hipsters,
                 o => o.HipsterId,
