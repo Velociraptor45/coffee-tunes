@@ -300,7 +300,7 @@
         Navigation.NavigateTo($"/franchise/{FranchiseId}");
     }
     
-    private Task HandleBarUpdated(BarContract updatedBar)
+    private async Task HandleBarUpdated(BarContract updatedBar)
     {
         if (updatedBar.Id == BarId)
         {
@@ -314,9 +314,8 @@
                 ResetVotingState();
             }
             
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
-        return Task.CompletedTask;
     }
     
     private async Task HandleBrewCycleUpdated(BrewCycleContract brewCycle)
@@ -324,43 +323,39 @@
         currentBrewCycle = brewCycle;
         ResetVotingState();
         revealResults = null; // Clear reveal results when a new brew cycle starts
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
         await LoadIngredients();
     }
     
-    private Task HandleBeanCast(BeanCastContract beanCast)
+    private async Task HandleBeanCast(BeanCastContract beanCast)
     {
         votedHipsterIds.Add(beanCast.HipsterId);
         UpdateVotedHipstersList();
-        StateHasChanged();
-        return Task.CompletedTask;
+        await InvokeAsync(StateHasChanged);
     }
     
-    private Task HandleHipsterJoined(HipsterJoinedContract hipsterJoined)
+    private async Task HandleHipsterJoined(HipsterJoinedContract hipsterJoined)
     {
         // Dictionary already handles deduplication
         if (!joinedHipsters.ContainsKey(hipsterJoined.HipsterId))
         {
             joinedHipsters[hipsterJoined.HipsterId] = hipsterJoined.Name;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
-        return Task.CompletedTask;
     }
     
-    private Task HandleHipsterLeft(Guid hipsterId)
+    private async Task HandleHipsterLeft(Guid hipsterId)
     {
         if (joinedHipsters.Remove(hipsterId))
         {
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
-        return Task.CompletedTask;
     }
     
-    private Task HandleBrewCycleRevealed(BrewCycleRevealContract revealContract)
+    private async Task HandleBrewCycleRevealed(BrewCycleRevealContract revealContract)
     {
         revealResults = revealContract;
-        StateHasChanged();
-        return Task.CompletedTask;
+        await InvokeAsync(StateHasChanged);
     }
     
     private void ResetVotingState()
