@@ -41,14 +41,11 @@
         {
             try
             {
-                var videoId = GetVideoId(Ingredient.Url);
-                if (!string.IsNullOrEmpty(videoId))
-                {
-                    dotNetHelper = DotNetObjectReference.Create(this);
-                    await JSRuntime.InvokeVoidAsync("youtubePlayerModule.createPlayer", 
-                        playerId, videoId, dotNetHelper, FranchiseId.ToString(), BarId.ToString());
-                    isPlayerInitialized = true;
-                }
+                Console.WriteLine("Initializing Youtube player...");
+                dotNetHelper = DotNetObjectReference.Create(this);
+                await JSRuntime.InvokeVoidAsync("youtubePlayerModule.createPlayer", 
+                    playerId, Ingredient.VideoId, dotNetHelper, FranchiseId.ToString(), BarId.ToString());
+                isPlayerInitialized = true;
             }
             catch (Exception ex)
             {
@@ -102,30 +99,6 @@
             {
                 await Console.Error.WriteLineAsync($"Error pausing video: {ex.Message}");
             }
-        }
-    }
-    
-    private string GetVideoId(string youtubeUrl)
-    {
-        try
-        {
-            // Extract video ID from YouTube URL
-            // https://www.youtube.com/watch?v=VIDEO_ID -> VIDEO_ID
-            var uri = new Uri(youtubeUrl);
-            
-            // Parse query string manually for Blazor WebAssembly compatibility
-            var query = uri.Query.TrimStart('?');
-            var videoId = query.Split('&')
-                .Select(param => param.Split('='))
-                .Where(parts => parts.Length == 2 && parts[0] == "v")
-                .Select(parts => parts[1])
-                .FirstOrDefault();
-                
-            return videoId ?? string.Empty;
-        }
-        catch
-        {
-            return string.Empty;
         }
     }
     
