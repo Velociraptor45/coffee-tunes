@@ -322,6 +322,9 @@
     private async Task HandleBrewCycleUpdated(BrewCycleContract brewCycle)
     {
         currentBrewCycle = brewCycle;
+        Console.WriteLine("Brew cycle updated!");
+        Console.WriteLine("Ingredient Id: " + currentBrewCycle.Ingredient.Id);
+        Console.WriteLine("Ingredient Url: " + currentBrewCycle.Ingredient.Url);
         ResetVotingState();
         revealResults = null; // Clear reveal results when a new brew cycle starts
         StateHasChanged();

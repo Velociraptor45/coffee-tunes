@@ -42,6 +42,7 @@
             Console.WriteLine("Executing first render...");
             try
             {
+                Console.WriteLine("VideoId: " + Ingredient.Url);
                 var videoId = GetVideoId(Ingredient.Url);
                 if (!string.IsNullOrEmpty(videoId))
                 {
@@ -123,6 +124,7 @@
                 .Where(parts => parts.Length == 2 && parts[0] == "v")
                 .Select(parts => parts[1])
                 .FirstOrDefault();
+            Console.WriteLine("Extracted videoId: " + videoId);
                 
             return videoId ?? string.Empty;
         }
