@@ -139,7 +139,7 @@ else
     private bool isLoadingContributors = false;
     private List<IngredientContributorContract> contributors = new();
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
         await LoadContributors();
     }
@@ -176,6 +176,7 @@ else
     private async Task HandleIngredientAdded()
     {
         showAddModal = false;
+        await LoadContributors(); // Reload contributors when an ingredient is added
         await OnIngredientAdded.InvokeAsync();
     }
 
@@ -189,6 +190,7 @@ else
         try
         {
             await Api.RemoveIngredient(FranchiseId, Bar.Id, ingredient.Id);
+            await LoadContributors(); // Reload contributors when an ingredient is removed
             await OnIngredientAdded.InvokeAsync(); // Reuse the same callback to refresh the list
         }
         catch (Exception ex)
