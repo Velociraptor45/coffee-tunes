@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.OpenApi;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace CoffeeTunes.WebApi.Auth;
 
@@ -16,7 +16,7 @@ internal sealed class BearerSecuritySchemeTransformer(
         var authenticationSchemes = await authenticationSchemeProvider.GetAllSchemesAsync();
         if (authenticationSchemes.Any(authScheme => authScheme.Name == "Bearer"))
         {
-            var requirements = new Dictionary<string, OpenApiSecurityScheme>
+            var requirements = new Dictionary<string, IOpenApiSecurityScheme>
             {
                 ["Bearer"] = new OpenApiSecurityScheme
                 {
@@ -26,11 +26,6 @@ internal sealed class BearerSecuritySchemeTransformer(
                     OpenIdConnectUrl = new Uri(authOptions.OidcUrl),
                     Scheme = "bearer",
                     BearerFormat = "JWT",
-                    Reference = new OpenApiReference
-                    {
-                        Id = "Bearer",
-                        Type = ReferenceType.SecurityScheme
-                    }
                 }
             };
 
@@ -39,14 +34,10 @@ internal sealed class BearerSecuritySchemeTransformer(
 
             foreach (var operation in document.Paths.Values.SelectMany(path => path.Operations))
             {
+                operation.Value.Security ??= [];
                 operation.Value.Security.Add(new OpenApiSecurityRequirement
                 {
-                    [
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference { Id = "Bearer", Type = ReferenceType.SecurityScheme }
-                        }
-                    ] = []
+                    [new OpenApiSecuritySchemeReference("Bearer", document)] = []
                 });
             }
         }
