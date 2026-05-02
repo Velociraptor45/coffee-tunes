@@ -13,6 +13,7 @@ using Newtonsoft.Json.Serialization;
 using RestEase.HttpClientFactory;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.UseDefaultServiceProvider(o => o.ValidateOnBuild = true);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
@@ -63,8 +64,6 @@ static void ConfigureHttpClient(WebAssemblyHostBuilder builder)
     if (string.IsNullOrWhiteSpace(connectionConfig.ApiUri))
         throw new InvalidOperationException("The Api-Url is missing in the configuration");
 
-    builder.Services.AddScoped<CustomAddressAuthorizationMessageHandler>();
-
     builder.Services
         .AddRestEaseClient<ICoffeeTunesApi>(
             connectionConfig.ApiUri,
@@ -77,5 +76,8 @@ static void ConfigureHttpClient(WebAssemblyHostBuilder builder)
                     DateFormatHandling = DateFormatHandling.IsoDateFormat
                 };
             })
-        .AddHttpMessageHandler<CustomAddressAuthorizationMessageHandler>();
+        .AddHttpMessageHandler(sp => new CustomAddressAuthorizationMessageHandler(
+            sp.GetRequiredService<IAccessTokenProvider>(),
+            sp.GetRequiredService<NavigationManager>(),
+            connectionConfig));;
 }
