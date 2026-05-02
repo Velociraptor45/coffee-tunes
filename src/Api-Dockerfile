@@ -10,7 +10,7 @@ FROM scratch AS base
 COPY --from=chisel /extract /
 
 ################## PUBLISH ################
-FROM mcr.microsoft.com/dotnet/sdk:10.0-bookworm-slim AS publish
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble AS publish
 WORKDIR /src
 COPY . .
 RUN dotnet publish "CoffeeTunes.WebApi/CoffeeTunes.WebApi.csproj" -c Release -o /app/publish --sc true
