@@ -77,8 +77,5 @@ static void ConfigureHttpClient(WebAssemblyHostBuilder builder)
                     DateFormatHandling = DateFormatHandling.IsoDateFormat
                 };
             })
-        .AddHttpMessageHandler(sp => new CustomAddressAuthorizationMessageHandler(
-            sp.GetRequiredService<IAccessTokenProvider>(),
-            sp.GetRequiredService<NavigationManager>(),
-            connectionConfig));
+        .AddHttpMessageHandler<CustomAddressAuthorizationMessageHandler>();
 }
