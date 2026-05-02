@@ -79,5 +79,5 @@ static void ConfigureHttpClient(WebAssemblyHostBuilder builder)
         .AddHttpMessageHandler(sp => new CustomAddressAuthorizationMessageHandler(
             sp.GetRequiredService<IAccessTokenProvider>(),
             sp.GetRequiredService<NavigationManager>(),
-            connectionConfig));;
+            connectionConfig));
 }
